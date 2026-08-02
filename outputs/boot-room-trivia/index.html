@@ -1,0 +1,1723 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Boot Room Trivia</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef2ee;
+      --canvas: #f7f8f4;
+      --surface: #ffffff;
+      --surface-alt: #f7fbf7;
+      --surface-hover: #edf5ee;
+      --fg: #001d12;
+      --deep: #061b12;
+      --deep-2: #092418;
+      --muted: #769085;
+      --mint: #d7e1d3;
+      --border: rgba(61, 74, 61, .16);
+      --border-subtle: rgba(61, 74, 61, .08);
+      --accent: #ff5900;
+      --accent-hover: #ff6614;
+      --success: #28ad78;
+      --warning: #e5bd13;
+      --danger: #d83216;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --shadow-sm: 0 1px 2px rgba(0, 29, 18, .05);
+      --shadow-md: 0 18px 44px rgba(0, 29, 18, .10);
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-height: 100%; background: var(--bg); }
+
+    body {
+      min-height: 100%;
+      margin: 0;
+      background:
+        linear-gradient(to bottom, var(--deep) 0, var(--deep) 390px, var(--bg) 390px, var(--bg) 100%);
+      color: var(--fg);
+      font-family: var(--font);
+      line-height: 1.45;
+    }
+
+    button, input, select { font: inherit; }
+
+    button {
+      cursor: pointer;
+      border: 0;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .56;
+    }
+
+    .app {
+      width: min(1180px, calc(100vw - 48px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+
+    .masthead,
+    .row,
+    .room-top,
+    .room-actions,
+    .score-row,
+    .question-meta,
+    .modal-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .masthead {
+      margin-bottom: 18px;
+      color: var(--mint);
+      font-size: 13px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 850;
+    }
+
+    .brand-mark {
+      display: inline-grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      background: var(--accent);
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 34px;
+      min-height: 420px;
+      overflow: hidden;
+      padding: 48px;
+      color: var(--mint);
+      background: var(--deep-2);
+      border: 1px solid rgba(215, 225, 211, .12);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 8px;
+      background: var(--accent);
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 28px;
+      min-width: 0;
+    }
+
+    .kicker,
+    .label {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .hero .kicker,
+    .table-panel .label,
+    .pot-card .label,
+    .player-seat .label {
+      color: rgba(215, 225, 211, .72);
+    }
+
+    h1 {
+      max-width: 740px;
+      margin: 12px 0 0;
+      color: #f6fff8;
+      font-size: clamp(34px, 6vw, 58px);
+      line-height: 1.02;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 720px;
+      margin: 16px 0 0;
+      color: rgba(215, 225, 211, .78);
+      font-size: 17px;
+    }
+
+    .hero-summary {
+      max-width: 760px;
+      margin: 0;
+      padding: 18px 20px;
+      border-left: 4px solid var(--accent);
+      background: rgba(255, 255, 255, .06);
+      color: #f4fbf1;
+      font-size: 15px;
+    }
+
+    .setup-card,
+    .panel,
+    .stat-card,
+    .player-card,
+    .modal-card {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .setup-card {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 18px;
+      align-content: start;
+      padding: 24px;
+      color: var(--fg);
+      box-shadow: 0 22px 56px rgba(0, 0, 0, .20);
+    }
+
+    .setup-card h2,
+    .panel h2,
+    .modal-card h2 {
+      margin: 8px 0 0;
+      line-height: 1.16;
+    }
+
+    .setup-card h2 { font-size: 24px; }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .field input,
+    .field select,
+    .answer-input {
+      width: 100%;
+      min-height: 42px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface-alt);
+      color: var(--fg);
+      outline: 0;
+    }
+
+    .player-fields {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .answer-input:focus {
+      border-color: rgba(255, 89, 0, .55);
+      box-shadow: 0 0 0 3px rgba(255, 89, 0, .12);
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 15px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--fg);
+      background: var(--surface);
+      font-size: 13px;
+      font-weight: 850;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .button:hover { background: var(--surface-hover); }
+
+    .button-primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .button-primary:hover { background: var(--accent-hover); }
+
+    .button-dark {
+      border-color: rgba(215, 225, 211, .18);
+      background: rgba(215, 225, 211, .10);
+      color: #f6fff8;
+    }
+
+    .button-danger {
+      border-color: rgba(216, 50, 22, .20);
+      color: var(--danger);
+      background: rgba(216, 50, 22, .08);
+    }
+
+    .button-clue {
+      width: 100%;
+      min-height: 48px;
+      justify-content: flex-start;
+      white-space: normal;
+      text-align: left;
+    }
+
+    .tag,
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 24px;
+      padding: 3px 9px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      color: var(--fg);
+      background: var(--surface-hover);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .tag-high {
+      color: var(--accent);
+      background: rgba(255, 89, 0, .10);
+      border-color: rgba(255, 89, 0, .22);
+    }
+
+    .tag-low {
+      color: #1e7c55;
+      background: rgba(101, 213, 165, .14);
+      border-color: rgba(101, 213, 165, .28);
+    }
+
+    .admin-badge {
+      color: #fff;
+      background: var(--deep);
+      border-color: rgba(0, 29, 18, .28);
+    }
+
+    .stats {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin: 18px 0 32px;
+    }
+
+    .stat-card {
+      position: relative;
+      min-height: 126px;
+      overflow: hidden;
+      padding: 20px;
+    }
+
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 4px;
+      background: var(--accent);
+    }
+
+    .stat-card strong {
+      display: block;
+      margin-top: 14px;
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .game-shell {
+      display: none;
+      gap: 18px;
+      margin-top: 30px;
+    }
+
+    .game-shell.is-live { display: grid; }
+
+    .room-top {
+      align-items: flex-end;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .room-top h2 {
+      margin: 6px 0 0;
+      font-size: 32px;
+      line-height: 1.14;
+    }
+
+    .table-grid {
+      display: grid;
+      grid-template-columns: minmax(280px, .72fr) minmax(0, 1.28fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .table-panel {
+      position: relative;
+      min-height: 540px;
+      overflow: hidden;
+      padding: 22px;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, .05) 0 1px, transparent 1px 100%),
+        linear-gradient(0deg, rgba(255, 255, 255, .05) 0 1px, transparent 1px 100%),
+        var(--deep);
+      background-size: 58px 58px;
+      color: var(--mint);
+      border: 1px solid rgba(215, 225, 211, .12);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .pitch {
+      position: absolute;
+      inset: 106px 22px 22px;
+      border: 1px solid rgba(215, 225, 211, .16);
+      border-radius: var(--radius-lg);
+      background:
+        linear-gradient(90deg, transparent 49.7%, rgba(215, 225, 211, .18) 49.7% 50.3%, transparent 50.3%),
+        radial-gradient(circle at center, transparent 0 58px, rgba(215, 225, 211, .18) 59px 60px, transparent 61px),
+        repeating-linear-gradient(90deg, rgba(101, 213, 165, .10) 0 68px, rgba(101, 213, 165, .05) 68px 136px);
+      opacity: .9;
+    }
+
+    .pot-card {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: end;
+      padding-bottom: 22px;
+      border-bottom: 1px solid rgba(215, 225, 211, .14);
+    }
+
+    .pot-card strong {
+      display: block;
+      margin-top: 8px;
+      color: #f6fff8;
+      font-size: 48px;
+      line-height: 1;
+    }
+
+    .pot-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 36px);
+      gap: 6px;
+    }
+
+    .pot-step {
+      display: grid;
+      place-items: center;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      color: rgba(215, 225, 211, .62);
+      background: rgba(215, 225, 211, .10);
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .pot-step.is-current {
+      color: #fff;
+      background: var(--accent);
+    }
+
+    .seats {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .player-seat {
+      display: grid;
+      grid-template-columns: 44px 1fr auto;
+      gap: 10px;
+      min-height: 76px;
+      padding: 14px;
+      border: 1px solid rgba(215, 225, 211, .12);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, .06);
+    }
+
+    .avatar {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      color: #fff;
+      background: linear-gradient(135deg, var(--avatar-a), var(--avatar-b));
+      font-size: 13px;
+      font-weight: 900;
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .14);
+    }
+
+    .player-seat.is-active {
+      border-color: rgba(255, 89, 0, .58);
+      background: rgba(255, 89, 0, .12);
+    }
+
+    .player-seat h3 {
+      margin: 3px 0 0;
+      color: #f6fff8;
+      font-size: 17px;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+
+    .player-seat strong {
+      color: #f6fff8;
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .player-seat span {
+      color: rgba(215, 225, 211, .7);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .panel {
+      padding: 22px;
+      min-width: 0;
+    }
+
+    .question-card {
+      display: grid;
+      gap: 18px;
+    }
+
+    .question-meta {
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .question-title {
+      margin: 8px 0 0;
+      font-size: 30px;
+      line-height: 1.16;
+      letter-spacing: 0;
+    }
+
+    .prompt {
+      min-height: 86px;
+      margin: 0;
+      padding: 18px;
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius-md);
+      background: var(--surface-alt);
+      color: #263e34;
+      font-size: 18px;
+      font-weight: 760;
+    }
+
+    .clue-list {
+      display: grid;
+      gap: 10px;
+      min-height: 174px;
+    }
+
+    .clue {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      min-height: 48px;
+      padding: 12px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-md);
+      color: var(--muted);
+      background: #fff;
+    }
+
+    .clue.is-revealed {
+      border-style: solid;
+      color: var(--fg);
+      background: var(--surface-hover);
+    }
+
+    .clue.is-current {
+      border-style: solid;
+      border-color: rgba(255, 89, 0, .36);
+      background: #fff7f1;
+    }
+
+    .clue.is-used {
+      opacity: .72;
+    }
+
+    .clue.is-locked {
+      background: #f5f7f3;
+    }
+
+    .clue-index {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 89, 0, .10);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .clue-body {
+      display: grid;
+      gap: 8px;
+    }
+
+    .clue-action {
+      justify-self: start;
+      min-height: 34px;
+      padding: 0 11px;
+      white-space: normal;
+    }
+
+    .clue-action:disabled {
+      background: #e8eee7;
+      color: #8aa096;
+      border-color: rgba(61, 74, 61, .10);
+      opacity: 1;
+    }
+
+    .answer-box {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+    }
+
+    .answer-tools {
+      display: grid;
+      gap: 10px;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .choice-button,
+    .sequence-button {
+      min-height: 46px;
+      justify-content: flex-start;
+      white-space: normal;
+      text-align: left;
+    }
+
+    .sequence-build {
+      min-height: 48px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface-alt);
+      color: var(--fg);
+      font-weight: 800;
+    }
+
+    .matching-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .matching-row {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+      gap: 10px;
+      align-items: center;
+    }
+
+    .leaderboard-section {
+      display: grid;
+      gap: 16px;
+      margin: 28px 0 0;
+    }
+
+    .leaderboard-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .leaderboard-card {
+      padding: 18px;
+    }
+
+    .leaderboard-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .leaderboard-row {
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 0;
+      border-top: 1px solid var(--border-subtle);
+      font-weight: 800;
+    }
+
+    .admin-options {
+      display: none;
+      gap: 12px;
+    }
+
+    .admin-options.is-visible {
+      display: grid;
+    }
+
+    .feedback {
+      min-height: 28px;
+      margin: 0;
+      color: var(--muted);
+      font-weight: 750;
+    }
+
+    .feedback.good { color: var(--success); }
+    .feedback.bad { color: var(--danger); }
+
+    .log {
+      display: grid;
+      gap: 8px;
+      max-height: 190px;
+      overflow: auto;
+      padding: 12px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      background: var(--surface-alt);
+    }
+
+    .log-entry {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .hidden { display: none !important; }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(0, 29, 18, .58);
+    }
+
+    .modal.is-open { display: grid; }
+
+    .modal-card {
+      width: min(620px, 100%);
+      padding: 26px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .standings {
+      display: grid;
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .player-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 16px;
+      background: var(--surface-alt);
+    }
+
+    .player-card h3 {
+      margin: 0;
+      font-size: 17px;
+      overflow-wrap: anywhere;
+    }
+
+    .player-card p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .player-card strong {
+      color: var(--accent);
+      font-size: 24px;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .table-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        background: linear-gradient(to bottom, var(--deep) 0, var(--deep) 360px, var(--bg) 360px, var(--bg) 100%);
+      }
+
+      .app {
+        width: min(100vw - 24px, 1180px);
+        padding-top: 16px;
+      }
+
+      .masthead,
+      .room-top,
+      .room-actions,
+      .score-row,
+      .modal-actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .hero {
+        min-height: auto;
+        padding: 30px 20px 22px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+        margin: 14px 0 28px;
+      }
+
+      .room-top h2,
+      .question-title {
+        font-size: 26px;
+      }
+
+      .table-panel,
+      .panel,
+      .modal-card {
+        padding: 18px;
+      }
+
+      .table-panel {
+        min-height: 500px;
+      }
+
+      .pot-card,
+      .answer-box,
+      .choice-grid,
+      .leaderboard-grid,
+      .matching-row {
+        grid-template-columns: 1fr;
+      }
+
+      .button,
+      .answer-input {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="masthead" aria-label="Game identity">
+      <span class="brand"><span class="brand-mark" aria-hidden="true">P</span> Boot Room Trivia</span>
+      <span>Hot-seat room prototype</span>
+    </div>
+
+    <section class="hero" id="setupView">
+      <div class="hero-copy">
+        <div>
+          <p class="kicker">Poker-room style football quiz</p>
+          <h1>Enter, take a seat, beat the table.</h1>
+          <p class="subtitle">Register your table name, pick a 2 to 4 seat room, and play humans or personality-driven table opponents. Every question starts at 10 points and every player gets one answer attempt.</p>
+        </div>
+        <p class="hero-summary">Credits are points only in this prototype. No cash buy-in, no cash-out, no official league marks. Bot response time averages about 7 seconds, with a 5-15 second range.</p>
+      </div>
+
+      <form class="setup-card" id="setupForm">
+        <div class="row">
+          <span class="tag tag-high">Let's play</span>
+          <span class="status admin-badge">Admin: Calmriver15</span>
+        </div>
+        <div>
+          <p class="label">Registration</p>
+          <h2>Claim your seat</h2>
+        </div>
+        <div class="field">
+          <label for="primaryPlayer">Your name</label>
+          <input id="primaryPlayer" name="primaryPlayer" placeholder="Enter your table name" maxlength="18">
+        </div>
+        <div class="field">
+          <label for="playerCount">Seats</label>
+          <select id="playerCount" name="playerCount">
+            <option value="2">2 players</option>
+            <option value="3">3 players</option>
+            <option value="4" selected>4 players</option>
+          </select>
+        </div>
+        <div class="field admin-options" id="adminOptions">
+          <label for="humanCount">Human players on this device</label>
+          <select id="humanCount" name="humanCount">
+            <option value="1" selected>1 human</option>
+            <option value="2">2 humans</option>
+            <option value="3">3 humans</option>
+            <option value="4">4 humans</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="botPersonality">Table personality</label>
+          <select id="botPersonality" name="botPersonality">
+            <option value="balanced" selected>Mixed table</option>
+            <option value="safe">Safe bettors</option>
+            <option value="connector">Connection masters</option>
+            <option value="shark">Sharks</option>
+            <option value="whale">Whales</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="questionCount">Question deck</label>
+          <select id="questionCount" name="questionCount">
+            <option value="5">5 questions</option>
+            <option value="10" selected>10 questions</option>
+            <option value="15">15 questions</option>
+          </select>
+        </div>
+        <div class="player-fields" id="playerFields"></div>
+        <button class="button button-primary" type="submit">Let's play</button>
+      </form>
+    </section>
+
+    <section class="stats" aria-label="Game rules">
+      <div class="stat-card"><p class="label">Question bank</p><strong>24</strong><span class="tag tag-low">4 leagues</span></div>
+      <div class="stat-card"><p class="label">Seats</p><strong>2-4</strong><span class="tag">Bots backfill</span></div>
+      <div class="stat-card"><p class="label">Starting score</p><strong>0</strong><span class="tag">Highest wins</span></div>
+      <div class="stat-card"><p class="label">Clue ladder</p><strong>10/5/3/1</strong><span class="tag tag-high">One use each</span></div>
+    </section>
+
+    <section class="leaderboard-section" id="leaderboardView" aria-label="Leaderboards">
+      <div class="room-top">
+        <div>
+          <p class="label">Rankings</p>
+          <h2>Weekly and all-time leaderboard</h2>
+        </div>
+        <span class="tag">Top scores</span>
+      </div>
+      <div class="leaderboard-grid">
+        <article class="panel leaderboard-card">
+          <p class="label">This week</p>
+          <div class="leaderboard-list" id="weeklyLeaderboard"></div>
+        </article>
+        <article class="panel leaderboard-card">
+          <p class="label">All time</p>
+          <div class="leaderboard-list" id="allTimeLeaderboard"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="game-shell" id="gameView" aria-live="polite">
+      <div class="room-top">
+        <div>
+          <p class="label">Live room</p>
+          <h2 id="roomTitle">Boot Room Table</h2>
+        </div>
+        <div class="room-actions">
+          <button class="button" id="newRoomButton" type="button">New room</button>
+          <button class="button button-danger" id="finishButton" type="button">End room</button>
+        </div>
+      </div>
+
+      <div class="table-grid">
+        <aside class="table-panel" aria-label="Player table">
+          <div class="pitch" aria-hidden="true"></div>
+          <div class="pot-card">
+            <div>
+              <p class="label">Current pot</p>
+              <strong id="potValue">10</strong>
+            </div>
+            <div class="pot-steps" id="potSteps" aria-label="Pot ladder"></div>
+          </div>
+          <div class="seats" id="playerSeats"></div>
+        </aside>
+
+        <section class="panel question-card" aria-label="Question">
+          <div class="question-meta">
+            <div>
+              <p class="label" id="questionProgress">Question 1 of 10</p>
+              <h2 class="question-title" id="turnLine">Player is on the clock</h2>
+            </div>
+            <span class="tag" id="categoryTag">Category</span>
+          </div>
+
+          <p class="prompt" id="questionPrompt"></p>
+          <div class="answer-tools" id="answerTools"></div>
+
+          <div class="clue-list" id="clueList"></div>
+
+          <form class="answer-box" id="answerForm">
+            <input class="answer-input" id="answerInput" name="answer" autocomplete="off" placeholder="Type your answer">
+            <button class="button button-primary" type="submit">Submit guess</button>
+          </form>
+
+          <div class="room-actions">
+            <button class="button button-dark" id="activateClueButton" type="button">Activate clue</button>
+            <button class="button" id="passButton" type="button">Pass</button>
+            <button class="button button-danger" id="skipButton" type="button">Admin void</button>
+          </div>
+
+          <p class="feedback" id="feedback"></p>
+
+          <div>
+            <p class="label">Room log</p>
+            <div class="log" id="gameLog"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <div class="modal-card">
+      <p class="label">Final standings</p>
+      <h2 id="resultTitle">Room complete</h2>
+      <div class="standings" id="standings"></div>
+      <div class="modal-actions">
+        <button class="button" id="closeResults" type="button">Back to table</button>
+        <button class="button button-primary" id="playAgain" type="button">Play again</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="endConfirmModal" role="dialog" aria-modal="true" aria-labelledby="endConfirmTitle">
+    <div class="modal-card">
+      <p class="label">End room</p>
+      <h2 id="endConfirmTitle">Are you sure?</h2>
+      <p>Ending the room will return everyone to the homepage setup.</p>
+      <div class="modal-actions">
+        <button class="button" id="cancelEndRoom" type="button">No</button>
+        <button class="button button-danger" id="confirmEndRoom" type="button">Yes, end room</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const potLadder = [10, 5, 3, 1];
+    const adminName = "Calmriver15";
+    const botPool = [
+      { name: "Aero47", personality: "safe", avatar: ["#2b8c7f", "#ff5900"], confidence: [0.12, 0.28, 0.42, 0.58], clueBias: 0.72 },
+      { name: "Luma82", personality: "connector", avatar: ["#7d5fff", "#28ad78"], confidence: [0.18, 0.38, 0.54, 0.72], clueBias: 0.66 },
+      { name: "Kairo19", personality: "shark", avatar: ["#0f172a", "#ff5900"], confidence: [0.34, 0.52, 0.68, 0.82], clueBias: 0.44 },
+      { name: "Mina64", personality: "whale", avatar: ["#f97316", "#0ea5e9"], confidence: [0.24, 0.42, 0.58, 0.74], clueBias: 0.38 },
+      { name: "Rio23", personality: "safe", avatar: ["#16a34a", "#0891b2"], confidence: [0.14, 0.3, 0.48, 0.64], clueBias: 0.78 },
+      { name: "Zara91", personality: "connector", avatar: ["#be185d", "#22c55e"], confidence: [0.2, 0.4, 0.58, 0.76], clueBias: 0.62 },
+      { name: "Niko58", personality: "shark", avatar: ["#111827", "#eab308"], confidence: [0.36, 0.54, 0.7, 0.86], clueBias: 0.4 },
+      { name: "Tala06", personality: "whale", avatar: ["#dc2626", "#2563eb"], confidence: [0.22, 0.4, 0.56, 0.72], clueBias: 0.35 }
+    ];
+    const leaderboardSeed = {
+      weekly: [
+        { name: "Calmriver15", kind: "human", points: 184 },
+        { name: "Kairo19", kind: "table opponent", points: 166 },
+        { name: "Mina64", kind: "table opponent", points: 142 },
+        { name: "NorthStand7", kind: "human", points: 119 },
+        { name: "Zara91", kind: "table opponent", points: 108 }
+      ],
+      allTime: [
+        { name: "Calmriver15", kind: "human", points: 1280 },
+        { name: "Aero47", kind: "table opponent", points: 1174 },
+        { name: "Tala06", kind: "table opponent", points: 1112 },
+        { name: "FalseNine22", kind: "human", points: 964 },
+        { name: "Rio23", kind: "table opponent", points: 906 }
+      ]
+    };
+    function q(data) {
+      return { aliases: [], options: [], items: [], pairs: [], ...data };
+    }
+
+    const questions = [
+      q({ type: "direct", league: "Premier League", difficulty: 7, category: "Guess the player", prompt: "Which player became the Premier League's all-time leading goalscorer?", answer: "Alan Shearer", aliases: ["shearer"], clues: ["He scored most of his Premier League goals for Blackburn Rovers and Newcastle United.", "He won the 1994-95 Premier League title.", "His record total is 260 Premier League goals."] }),
+      q({ type: "multiple_choice", league: "Premier League", difficulty: 5, category: "Champion", prompt: "Which club won the 2015-16 Premier League title?", answer: "Leicester City", options: ["Tottenham Hotspur", "Arsenal", "Leicester City", "Chelsea"], aliases: ["leicester"], clues: ["They began the season as a huge outsider.", "Claudio Ranieri was their manager.", "Jamie Vardy and Riyad Mahrez were central to the run."] }),
+      q({ type: "fill_blank", league: "Premier League", difficulty: 6, category: "Record", prompt: "Fill the blank: Erling Haaland scored ___ Premier League goals in 2022-23.", answer: "36", aliases: ["thirty six", "thirty-six"], clues: ["It set the single-season Premier League record.", "He did it in his first Manchester City season.", "The number is six more than 30."] }),
+      q({ type: "sequence", league: "Premier League", difficulty: 8, category: "Sequence", prompt: "Arrange these clubs by their first Premier League title win, earliest to latest.", answer: ["Manchester United", "Chelsea", "Manchester City", "Leicester City"], items: ["Leicester City", "Manchester City", "Chelsea", "Manchester United"], clues: ["One of these first won it in 1992-93.", "Chelsea's first came under Jose Mourinho.", "Leicester is the latest first-time winner in this group."] }),
+      q({ type: "matching", league: "Premier League", difficulty: 7, category: "Match", prompt: "Match each player to the club most associated with the listed Premier League record.", answer: { "Alan Shearer": "Newcastle United", "Ryan Giggs": "Manchester United", "Petr Cech": "Chelsea" }, pairs: [["Alan Shearer", "Newcastle United"], ["Ryan Giggs", "Manchester United"], ["Petr Cech", "Chelsea"]], options: ["Chelsea", "Manchester United", "Newcastle United"], clues: ["One is the all-time goals leader.", "One is the all-time assists leader.", "One is the clean-sheet record holder."] }),
+      q({ type: "direct", league: "Premier League", difficulty: 6, category: "Guess the club", prompt: "Which club won four straight Premier League titles from 2020-21 through 2023-24?", answer: "Manchester City", aliases: ["man city", "city", "manchester city fc"], clues: ["Their manager was Pep Guardiola.", "The run included a treble season in 2022-23.", "Their home ground is the Etihad Stadium."] }),
+      q({ type: "fill_blank", league: "Premier League", difficulty: 5, category: "Points record", prompt: "Fill the blank: Manchester City won ___ points in the 2017-18 Premier League season.", answer: "100", aliases: ["one hundred"], clues: ["It remains the competition's points record.", "The side became known as the Centurions.", "Gabriel Jesus scored late at Southampton to reach the milestone."] }),
+      q({ type: "multiple_choice", league: "La Liga", difficulty: 4, category: "Champion", prompt: "Which club is famously known for winning La Liga in 2013-14 under Diego Simeone?", answer: "Atletico Madrid", options: ["Valencia", "Atletico Madrid", "Sevilla", "Villarreal"], aliases: ["atletico", "atlético madrid"], clues: ["They interrupted the Barcelona-Real Madrid title rhythm.", "They secured the title on the final day at Camp Nou.", "Their manager was Diego Simeone."] }),
+      q({ type: "direct", league: "La Liga", difficulty: 8, category: "Record scorer", prompt: "Who is La Liga's all-time top goalscorer?", answer: "Lionel Messi", aliases: ["messi"], clues: ["He spent his peak Spanish league years at Barcelona.", "He also holds many Barcelona scoring records.", "He wore number 10 for most of that era."] }),
+      q({ type: "sequence", league: "La Liga", difficulty: 7, category: "Sequence", prompt: "Arrange these Spanish clubs by number of La Liga titles, highest to lowest.", answer: ["Real Madrid", "Barcelona", "Atletico Madrid", "Valencia"], items: ["Valencia", "Atletico Madrid", "Barcelona", "Real Madrid"], clues: ["The top two are Spain's two global giants.", "Atletico rank ahead of Valencia.", "Real Madrid lead the list."] }),
+      q({ type: "matching", league: "La Liga", difficulty: 6, category: "Match", prompt: "Match each La Liga club to its home stadium.", answer: { "Real Madrid": "Santiago Bernabeu", "Barcelona": "Camp Nou", "Atletico Madrid": "Metropolitano" }, pairs: [["Real Madrid", "Santiago Bernabeu"], ["Barcelona", "Camp Nou"], ["Atletico Madrid", "Metropolitano"]], options: ["Camp Nou", "Metropolitano", "Santiago Bernabeu"], clues: ["One stadium is strongly tied to the Bernabeu name.", "Barcelona's home is Camp Nou.", "Atletico moved to the Metropolitano era after leaving Vicente Calderon."] }),
+      q({ type: "multiple_choice", league: "Serie A", difficulty: 5, category: "Club history", prompt: "Which Serie A club is nicknamed the Old Lady?", answer: "Juventus", options: ["AC Milan", "Inter Milan", "Juventus", "Roma"], aliases: ["juve"], clues: ["They play in Turin.", "Their colors are black and white.", "The Italian nickname is La Vecchia Signora."] }),
+      q({ type: "direct", league: "Serie A", difficulty: 7, category: "Record scorer", prompt: "Who is Serie A's all-time leading goalscorer?", answer: "Silvio Piola", aliases: ["piola"], clues: ["He played long before the modern Champions League era.", "His record is usually listed above Francesco Totti and Gunnar Nordahl.", "His first name is Silvio."] }),
+      q({ type: "fill_blank", league: "Serie A", difficulty: 6, category: "Title streak", prompt: "Fill the blank: Juventus won ___ consecutive Serie A titles from 2011-12 through 2019-20.", answer: "9", aliases: ["nine"], clues: ["The streak started under Antonio Conte.", "It continued under Massimiliano Allegri and Maurizio Sarri.", "The number is one short of ten."] }),
+      q({ type: "matching", league: "Serie A", difficulty: 6, category: "Derbies", prompt: "Match each derby to one of its headline clubs.", answer: { "Derby della Madonnina": "Inter Milan", "Derby della Capitale": "Roma", "Derby d'Italia": "Juventus" }, pairs: [["Derby della Madonnina", "Inter Milan"], ["Derby della Capitale", "Roma"], ["Derby d'Italia", "Juventus"]], options: ["Inter Milan", "Juventus", "Roma"], clues: ["Madonnina is Milan-based.", "Capitale is Rome-based.", "Derby d'Italia is tied to Juventus and Inter."] }),
+      q({ type: "multiple_choice", league: "Bundesliga", difficulty: 4, category: "Champion", prompt: "Which club ended Bayern Munich's long Bundesliga title streak by winning the 2023-24 title?", answer: "Bayer Leverkusen", options: ["Borussia Dortmund", "RB Leipzig", "Bayer Leverkusen", "VfB Stuttgart"], aliases: ["leverkusen", "bayer 04 leverkusen"], clues: ["They were managed by Xabi Alonso.", "Their league season was unbeaten.", "Their nickname includes Werkself."] }),
+      q({ type: "direct", league: "Bundesliga", difficulty: 7, category: "Record scorer", prompt: "Who is the Bundesliga's all-time leading goalscorer?", answer: "Gerd Muller", aliases: ["gerd müller", "muller", "müller"], clues: ["He was a Bayern Munich legend.", "He was nicknamed Der Bomber.", "His surname is Muller/Müller."] }),
+      q({ type: "sequence", league: "Bundesliga", difficulty: 7, category: "Sequence", prompt: "Arrange these Bundesliga clubs by their first league title in the Bundesliga era, earliest to latest.", answer: ["Koln", "Borussia Monchengladbach", "Borussia Dortmund", "Bayer Leverkusen"], items: ["Bayer Leverkusen", "Borussia Dortmund", "Koln", "Borussia Monchengladbach"], aliases: ["cologne > borussia monchengladbach > borussia dortmund > bayer leverkusen"], clues: ["The first Bundesliga champion was Koln/Cologne.", "Monchengladbach's first came before Dortmund's Bundesliga-era first.", "Leverkusen is the latest first-time champion listed."] }),
+      q({ type: "matching", league: "Bundesliga", difficulty: 5, category: "Match", prompt: "Match each German club to its commonly associated city.", answer: { "Bayern Munich": "Munich", "Borussia Dortmund": "Dortmund", "Bayer Leverkusen": "Leverkusen" }, pairs: [["Bayern Munich", "Munich"], ["Borussia Dortmund", "Dortmund"], ["Bayer Leverkusen", "Leverkusen"]], options: ["Dortmund", "Leverkusen", "Munich"], clues: ["One answer is in the club name.", "Bayern are based in Munich.", "Leverkusen is both club and city name."] }),
+      q({ type: "multiple_choice", league: "Premier League", difficulty: 8, category: "Manager", prompt: "Which manager won the Premier League title in his first Chelsea season in 2004-05?", answer: "Jose Mourinho", options: ["Carlo Ancelotti", "Jose Mourinho", "Avram Grant", "Claudio Ranieri"], aliases: ["mourinho", "jose mourinho", "josé mourinho"], clues: ["His team conceded only 15 league goals.", "He arrived from Porto.", "He called himself a special manager in his first press conference."] }),
+      q({ type: "multiple_choice", league: "Premier League", difficulty: 3, category: "Stadium", prompt: "Which Premier League club is most associated with Old Trafford?", answer: "Manchester United", options: ["Chelsea", "Manchester United", "Everton", "Arsenal"], aliases: ["man united", "man utd"], clues: ["The ground is nicknamed the Theatre of Dreams.", "It is in Greater Manchester.", "The club wears red at home."] }),
+      q({ type: "direct", league: "La Liga", difficulty: 9, category: "Debut goal", prompt: "Against which club did Lionel Messi score his first La Liga goal for Barcelona?", answer: "Albacete", aliases: ["albacete balompie", "albacete balompié"], clues: ["The goal came in 2005.", "Ronaldinho assisted him with a lifted pass.", "The club name starts with Al-."] }),
+      q({ type: "fill_blank", league: "Serie A", difficulty: 10, category: "Fastest goal", prompt: "Fill the blank: Rafael Leao scored after about ___ seconds for AC Milan against Sassuolo in 2020, a famous Serie A fastest-goal record.", answer: "6", aliases: ["6.2", "six", "six seconds"], clues: ["The goal came almost immediately from kick-off.", "It was for AC Milan.", "The rounded answer is six seconds."] }),
+      q({ type: "multiple_choice", league: "Bundesliga", difficulty: 9, category: "Scoring burst", prompt: "Who scored five Bundesliga goals in nine minutes for Bayern Munich against Wolfsburg in 2015?", answer: "Robert Lewandowski", options: ["Thomas Muller", "Robert Lewandowski", "Mario Gomez", "Arjen Robben"], aliases: ["lewandowski"], clues: ["He came off the bench.", "The opponent was Wolfsburg.", "He later became one of Bayern's greatest scorers."] })
+    ];
+
+    const state = {
+      players: [],
+      deck: [],
+      currentQuestion: 0,
+      activePlayer: 0,
+      clueIndex: 0,
+      pot: 10,
+      attemptedSeatIds: new Set(),
+      passedSeatIds: new Set(),
+      clueUsedSeatIds: new Set(),
+      botTimer: null,
+      sequenceSelection: [],
+      isFinished: false
+    };
+
+    const setupView = document.querySelector("#setupView");
+    const setupForm = document.querySelector("#setupForm");
+    const primaryPlayer = document.querySelector("#primaryPlayer");
+    const playerCount = document.querySelector("#playerCount");
+    const adminOptions = document.querySelector("#adminOptions");
+    const humanCount = document.querySelector("#humanCount");
+    const botPersonality = document.querySelector("#botPersonality");
+    const questionCount = document.querySelector("#questionCount");
+    const playerFields = document.querySelector("#playerFields");
+    const leaderboardView = document.querySelector("#leaderboardView");
+    const gameView = document.querySelector("#gameView");
+    const roomTitle = document.querySelector("#roomTitle");
+    const potValue = document.querySelector("#potValue");
+    const potSteps = document.querySelector("#potSteps");
+    const playerSeats = document.querySelector("#playerSeats");
+    const questionProgress = document.querySelector("#questionProgress");
+    const turnLine = document.querySelector("#turnLine");
+    const categoryTag = document.querySelector("#categoryTag");
+    const questionPrompt = document.querySelector("#questionPrompt");
+    const answerTools = document.querySelector("#answerTools");
+    const clueList = document.querySelector("#clueList");
+    const answerForm = document.querySelector("#answerForm");
+    const answerInput = document.querySelector("#answerInput");
+    const activateClueButton = document.querySelector("#activateClueButton");
+    const passButton = document.querySelector("#passButton");
+    const skipButton = document.querySelector("#skipButton");
+    const feedback = document.querySelector("#feedback");
+    const gameLog = document.querySelector("#gameLog");
+    const resultModal = document.querySelector("#resultModal");
+    const endConfirmModal = document.querySelector("#endConfirmModal");
+    const standings = document.querySelector("#standings");
+    const closeResults = document.querySelector("#closeResults");
+    const playAgain = document.querySelector("#playAgain");
+    const newRoomButton = document.querySelector("#newRoomButton");
+    const finishButton = document.querySelector("#finishButton");
+    const cancelEndRoom = document.querySelector("#cancelEndRoom");
+    const confirmEndRoom = document.querySelector("#confirmEndRoom");
+    const weeklyLeaderboard = document.querySelector("#weeklyLeaderboard");
+    const allTimeLeaderboard = document.querySelector("#allTimeLeaderboard");
+
+    function normalize(value) {
+      return value
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9 ]/g, "")
+        .replace(/\s+/g, " ");
+    }
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function renderPlayerFields() {
+      const isAdmin = primaryPlayer.value.trim().toLowerCase() === adminName.toLowerCase();
+      adminOptions.classList.toggle("is-visible", isAdmin);
+      if (!isAdmin) humanCount.value = "1";
+      syncHumanOptions();
+      const count = Number(humanCount.value);
+      playerFields.innerHTML = "";
+      if (!isAdmin) return;
+      for (let i = 1; i < count; i += 1) {
+        const field = document.createElement("div");
+        field.className = "field";
+        field.innerHTML = `
+          <label for="player-${i}">Additional human ${i + 1}</label>
+          <input id="player-${i}" name="player-${i}" value="Player ${i + 1}" maxlength="18">
+        `;
+        playerFields.appendChild(field);
+      }
+    }
+
+    function syncHumanOptions() {
+      const seats = Number(playerCount.value);
+      Array.from(humanCount.options).forEach((option) => {
+        option.disabled = Number(option.value) > seats;
+      });
+      if (Number(humanCount.value) > seats) humanCount.value = String(seats);
+    }
+
+    function startRoom(event) {
+      event.preventDefault();
+      const count = Number(playerCount.value);
+      const humans = primaryPlayer.value.trim().toLowerCase() === adminName.toLowerCase() ? Number(humanCount.value) : 1;
+      const deckSize = Number(questionCount.value);
+      const primaryName = primaryPlayer.value.trim() || `Guest${Math.floor(10 + Math.random() * 90)}`;
+      const humanPlayers = Array.from({ length: humans }, (_, index) => {
+        const input = index === 0 ? primaryPlayer : document.querySelector(`#player-${index}`);
+        const name = input?.value.trim() || `Player ${index + 1}`;
+        return makePlayer(name, "human", index, name.toLowerCase() === adminName.toLowerCase());
+      });
+      const botPlayers = makeBots(count - humans);
+      state.players = [...humanPlayers, ...botPlayers];
+      state.deck = shuffle(questions).slice(0, deckSize).map(hydrateQuestion);
+      state.currentQuestion = 0;
+      state.activePlayer = 0;
+      state.clueIndex = 0;
+      state.pot = potLadder[0];
+      state.attemptedSeatIds = new Set();
+      state.passedSeatIds = new Set();
+      state.clueUsedSeatIds = new Set();
+      state.sequenceSelection = [];
+      state.isFinished = false;
+      setupView.classList.add("hidden");
+      leaderboardView.classList.add("hidden");
+      gameView.classList.add("is-live");
+      gameLog.innerHTML = "";
+      addLog(`Room opened. Scores start at 0; ${botPlayers.length} table opponents filled empty seats.`);
+      render();
+      runBotIfNeeded();
+    }
+
+    function makePlayer(name, kind, index, isAdmin = false, botProfile = null) {
+      const initials = name.slice(0, 2).toUpperCase();
+      const avatar = botProfile?.avatar || [["#ff5900", "#28ad78"], ["#0ea5e9", "#111827"], ["#7c3aed", "#16a34a"], ["#be123c", "#f59e0b"]][index % 4];
+      return {
+        id: `${kind}-${index}-${normalize(name).replace(/\s/g, "-")}`,
+        name,
+        kind,
+        isAdmin,
+        score: 0,
+        correct: 0,
+        attempts: 0,
+        passes: 0,
+        clues: 0,
+        personality: botProfile?.personality || (isAdmin ? "god mode" : "human"),
+        confidence: botProfile?.confidence || [0, 0, 0, 0],
+        clueBias: botProfile?.clueBias || 0,
+        avatar,
+        initials
+      };
+    }
+
+    function makeBots(count) {
+      const preference = botPersonality.value;
+      const pool = preference === "balanced" ? botPool : botPool.filter((bot) => bot.personality === preference);
+      return shuffle(pool.length ? pool : botPool).slice(0, count).map((bot, index) => (
+        makePlayer(bot.name, "bot", index, false, bot)
+      ));
+    }
+
+    function current() {
+      return state.deck[state.currentQuestion];
+    }
+
+    function hydrateQuestion(question) {
+      return {
+        ...question,
+        clues: question.clues.map((clue, index) => ({
+          id: `${normalize(question.prompt).slice(0, 36).replace(/\s/g, "-")}-clue-${index + 1}`,
+          text: clue,
+          revealOrder: index + 1,
+          potAfterReveal: potLadder[index + 1]
+        }))
+      };
+    }
+
+    function acceptedAnswers(question) {
+      if (Array.isArray(question.answer)) return [question.answer.map(normalize).join(">"), ...(question.aliases || []).map(normalize)];
+      if (typeof question.answer === "object") {
+        return [Object.entries(question.answer).map(([left, right]) => `${normalize(left)}:${normalize(right)}`).sort().join("|")];
+      }
+      return [question.answer, ...(question.aliases || [])].map(normalize);
+    }
+
+    function isCorrect(question, value) {
+      const guess = Array.isArray(value)
+        ? value.map(normalize).join(">")
+        : typeof value === "object"
+          ? Object.entries(value).map(([left, right]) => `${normalize(left)}:${normalize(right)}`).sort().join("|")
+          : normalize(value);
+      return acceptedAnswers(question).includes(guess);
+    }
+
+    function formatType(type) {
+      return type.replace("_", " ");
+    }
+
+    function render() {
+      if (state.isFinished) return;
+      const question = current();
+      const player = state.players[state.activePlayer];
+      const isBot = player.kind === "bot";
+      const isAdminRoom = state.players.some((seat) => seat.isAdmin);
+      roomTitle.textContent = `${state.players.length}-player table`;
+      questionProgress.textContent = `Question ${state.currentQuestion + 1} of ${state.deck.length}`;
+      turnLine.textContent = `${player.name} is on the clock`;
+      categoryTag.textContent = `${question.league} · ${formatType(question.type)} · L${question.difficulty}`;
+      questionPrompt.textContent = question.prompt;
+      potValue.textContent = state.pot;
+      feedback.textContent = "";
+      feedback.className = "feedback";
+      answerInput.value = "";
+
+      potSteps.innerHTML = potLadder.map((value) => (
+        `<span class="pot-step ${value === state.pot ? "is-current" : ""}">${value}</span>`
+      )).join("");
+
+      playerSeats.innerHTML = state.players.map((player, index) => `
+        <article class="player-seat ${index === state.activePlayer ? "is-active" : ""}" style="--avatar-a:${player.avatar[0]};--avatar-b:${player.avatar[1]}">
+          <span class="avatar" aria-hidden="true">${escapeHtml(player.initials)}</span>
+          <div>
+            <p class="label">${index === state.activePlayer ? "On clock" : "Waiting"}</p>
+            <h3>${escapeHtml(player.name)}</h3>
+            <span>${escapeHtml(player.personality)} · ${player.correct} correct · ${player.clues} clues · ${player.passes} passes</span>
+          </div>
+          <strong>${player.score}</strong>
+        </article>
+      `).join("");
+
+      clueList.innerHTML = question.clues.map((clue, index) => {
+        const revealed = index < state.clueIndex;
+        const clueUsed = state.clueUsedSeatIds.has(player.id);
+        const isNextClue = index === state.clueIndex && !clueUsed;
+        const isPastLocked = index < state.clueIndex && !revealed;
+        const rowClass = revealed ? "is-revealed is-used" : isNextClue ? "is-current" : isPastLocked ? "is-used" : "is-locked";
+        const buttonLabel = revealed ? "Revealed" : isNextClue ? `Activate clue: pot becomes ${clue.potAfterReveal}` : "Locked";
+        return `
+          <div class="clue ${rowClass}">
+            <span class="clue-index">${index + 1}</span>
+            <span class="clue-body">
+              <span>${revealed ? escapeHtml(clue.text) : isNextClue ? "Tap to reveal this clue" : "Clue locked"}</span>
+              <button class="button clue-action" type="button" data-clue-index="${index}" ${isNextClue && !isBot ? "" : "disabled"}>${buttonLabel}</button>
+            </span>
+          </div>
+        `;
+      }).join("");
+
+      const clueUsed = state.clueUsedSeatIds.has(player.id);
+      activateClueButton.disabled = isBot || clueUsed || state.clueIndex >= 3;
+      activateClueButton.textContent = clueUsed ? "Clue used" : state.clueIndex >= 3 ? "No clues left" : `Activate next clue (${state.pot} -> ${potLadder[state.clueIndex + 1]})`;
+      answerInput.disabled = isBot;
+      answerForm.querySelector("button").disabled = isBot;
+      renderAnswerTools(question, isBot);
+      passButton.disabled = isBot;
+      skipButton.classList.toggle("hidden", !isAdminRoom);
+    }
+
+    function renderAnswerTools(question, isBot) {
+      answerTools.innerHTML = "";
+      answerForm.classList.toggle("hidden", !["direct", "fill_blank"].includes(question.type));
+      answerInput.placeholder = question.type === "fill_blank" ? "Fill the blank" : "Type your answer";
+
+      if (question.type === "multiple_choice") {
+        answerTools.innerHTML = `
+          <div class="choice-grid">
+            ${question.options.map((option) => `<button class="button choice-button" type="button" data-answer="${escapeHtml(option)}" ${isBot ? "disabled" : ""}>${escapeHtml(option)}</button>`).join("")}
+          </div>
+        `;
+        return;
+      }
+
+      if (question.type === "sequence") {
+        const selected = state.sequenceSelection.join(" > ") || "Build the order by tapping clubs";
+        answerTools.innerHTML = `
+          <div class="sequence-build">${escapeHtml(selected)}</div>
+          <div class="choice-grid">
+            ${question.items.map((item) => `<button class="button sequence-button" type="button" data-sequence="${escapeHtml(item)}" ${isBot || state.sequenceSelection.includes(item) ? "disabled" : ""}>${escapeHtml(item)}</button>`).join("")}
+          </div>
+          <div class="room-actions">
+            <button class="button" type="button" data-sequence-reset ${isBot ? "disabled" : ""}>Reset order</button>
+            <button class="button button-primary" type="button" data-sequence-submit ${isBot ? "disabled" : ""}>Submit order</button>
+          </div>
+        `;
+        return;
+      }
+
+      if (question.type === "matching") {
+        answerTools.innerHTML = `
+          <div class="matching-grid">
+            ${question.pairs.map(([left]) => `
+              <label class="matching-row">
+                <span>${escapeHtml(left)}</span>
+                <select data-match-left="${escapeHtml(left)}" ${isBot ? "disabled" : ""}>
+                  <option value="">Choose match</option>
+                  ${question.options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join("")}
+                </select>
+              </label>
+            `).join("")}
+          </div>
+          <button class="button button-primary" type="button" data-matching-submit ${isBot ? "disabled" : ""}>Submit matches</button>
+        `;
+      }
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function addLog(message) {
+      const entry = document.createElement("p");
+      entry.className = "log-entry";
+      entry.textContent = message;
+      gameLog.prepend(entry);
+    }
+
+    function submitGuess(event) {
+      event.preventDefault();
+      const guess = answerInput.value.trim();
+      if (!guess) {
+        setFeedback("Type a guess first.", "bad");
+        return;
+      }
+      submitAnswer(guess);
+    }
+
+    function submitAnswer(guess) {
+      const question = current();
+      const player = state.players[state.activePlayer];
+      if (state.attemptedSeatIds.has(player.id) || state.passedSeatIds.has(player.id)) {
+        setFeedback("This player has already used their opportunity on this question.", "bad");
+        return;
+      }
+      player.attempts += 1;
+      state.attemptedSeatIds.add(player.id);
+      state.sequenceSelection = [];
+      if (isCorrect(question, guess)) {
+        player.score += state.pot;
+        player.correct += 1;
+        addLog(`${player.name} won ${state.pot} with "${formatAnswer(question.answer)}".`);
+        setFeedback(`Correct. ${player.name} wins ${state.pot}.`, "good");
+        setTimeout(nextQuestion, 650);
+        return;
+      }
+
+      addLog(`${player.name} missed with "${formatAnswer(guess)}".`);
+      advanceToNextEligible();
+      setFeedback("Not quite. The turn moves on.", "bad");
+    }
+
+    function formatAnswer(value) {
+      if (Array.isArray(value)) return value.join(" > ");
+      if (typeof value === "object") return Object.entries(value).map(([left, right]) => `${left}: ${right}`).join(", ");
+      return value;
+    }
+
+    function activateClue(requestedIndex = state.clueIndex) {
+      const player = state.players[state.activePlayer];
+      if (player.kind === "bot") return;
+      if (requestedIndex !== state.clueIndex) {
+        setFeedback("Clues must be activated in order.", "bad");
+        return;
+      }
+      if (state.clueUsedSeatIds.has(player.id)) {
+        setFeedback("You already activated one clue this question.", "bad");
+        return;
+      }
+      if (state.clueIndex >= 3) {
+        setFeedback("No clues left to activate.", "bad");
+        return;
+      }
+      const clue = current().clues[state.clueIndex];
+      state.clueIndex += 1;
+      state.pot = clue.potAfterReveal;
+      state.clueUsedSeatIds.add(player.id);
+      player.clues += 1;
+      addLog(`${player.name} activated clue ${state.clueIndex}. Pot is now ${state.pot}.`);
+      render();
+      setFeedback("Clue activated. You can still answer or pass.", "good");
+    }
+
+    function passTurn() {
+      const player = state.players[state.activePlayer];
+      player.passes += 1;
+      state.passedSeatIds.add(player.id);
+      state.sequenceSelection = [];
+      addLog(`${player.name} passed.`);
+      advanceToNextEligible();
+    }
+
+    function advanceToNextEligible() {
+      if (allPlayersDone()) {
+        voidQuestion();
+        return;
+      }
+      for (let offset = 1; offset <= state.players.length; offset += 1) {
+        const nextIndex = (state.activePlayer + offset) % state.players.length;
+        const nextPlayer = state.players[nextIndex];
+        if (!state.attemptedSeatIds.has(nextPlayer.id) && !state.passedSeatIds.has(nextPlayer.id)) {
+          state.activePlayer = nextIndex;
+          state.sequenceSelection = [];
+          render();
+          runBotIfNeeded();
+          return;
+        }
+      }
+    }
+
+    function allPlayersDone() {
+      return state.players.every((player) => (
+        state.attemptedSeatIds.has(player.id) || state.passedSeatIds.has(player.id)
+      ));
+    }
+
+    function voidQuestion() {
+      addLog(`Question voided. Answer was "${formatAnswer(current().answer)}".`);
+      setFeedback(`Voided. Answer: ${formatAnswer(current().answer)}.`, "bad");
+      setTimeout(nextQuestion, 650);
+    }
+
+    function nextQuestion() {
+      state.currentQuestion += 1;
+      if (state.currentQuestion >= state.deck.length) {
+        finishRoom();
+        return;
+      }
+      state.clueIndex = 0;
+      state.pot = potLadder[0];
+      state.activePlayer = state.currentQuestion % state.players.length;
+      state.attemptedSeatIds = new Set();
+      state.passedSeatIds = new Set();
+      state.clueUsedSeatIds = new Set();
+      state.sequenceSelection = [];
+      render();
+      runBotIfNeeded();
+    }
+
+    function runBotIfNeeded() {
+      clearTimeout(state.botTimer);
+      if (state.isFinished) return;
+      const player = state.players[state.activePlayer];
+      if (player.kind !== "bot") {
+        answerInput.focus();
+        return;
+      }
+      setFeedback(`${player.name} is reading the room.`, "good");
+      state.botTimer = setTimeout(() => takeBotTurn(player), botAnswerDelay());
+    }
+
+    function botAnswerDelay() {
+      const base = 5000 + Math.random() * 4000;
+      const longThink = Math.random() < 0.12 ? Math.random() * 6000 : 0;
+      return Math.round(Math.min(15000, base + longThink));
+    }
+
+    function takeBotTurn(player) {
+      if (state.isFinished || state.players[state.activePlayer].id !== player.id) return;
+      const confidence = player.confidence[state.clueIndex] || 0;
+      const wantsClue = state.clueIndex < 3 && !state.clueUsedSeatIds.has(player.id) && Math.random() < player.clueBias;
+      if (wantsClue && Math.random() > confidence) {
+        state.clueIndex += 1;
+        state.pot = current().clues[state.clueIndex - 1].potAfterReveal;
+        state.clueUsedSeatIds.add(player.id);
+        player.clues += 1;
+        addLog(`${player.name} activated clue ${state.clueIndex}. Pot is now ${state.pot}.`);
+        render();
+        state.botTimer = setTimeout(() => takeBotTurn(player), botAnswerDelay());
+        return;
+      }
+      player.attempts += 1;
+      state.attemptedSeatIds.add(player.id);
+      if (Math.random() < confidence) {
+        player.score += state.pot;
+        player.correct += 1;
+        addLog(`${player.name} won ${state.pot} with "${formatAnswer(current().answer)}".`);
+        setTimeout(nextQuestion, 650);
+        return;
+      }
+      addLog(`${player.name} missed and is out for this question.`);
+      advanceToNextEligible();
+    }
+
+    function finishRoom() {
+      state.isFinished = true;
+      updateLeaderboards();
+      renderStandings();
+      resultModal.classList.add("is-open");
+    }
+
+    function openEndConfirm() {
+      clearTimeout(state.botTimer);
+      endConfirmModal.classList.add("is-open");
+    }
+
+    function renderStandings() {
+      const ranked = [...state.players].sort((a, b) => b.score - a.score);
+      const winner = ranked[0];
+      document.querySelector("#resultTitle").textContent = `${winner.name} wins the room`;
+      standings.innerHTML = ranked.map((player, index) => `
+        <article class="player-card">
+          <div>
+            <h3>${index + 1}. ${escapeHtml(player.name)}</h3>
+            <p>${player.personality} · ${player.correct} correct · ${player.clues} clues · ${player.passes} passes</p>
+          </div>
+          <strong>${player.score}</strong>
+        </article>
+      `).join("");
+    }
+
+    function setFeedback(message, kind) {
+      feedback.textContent = message;
+      feedback.className = `feedback ${kind}`;
+    }
+
+    function renderLeaderboards() {
+      renderLeaderboardList(weeklyLeaderboard, leaderboardSeed.weekly);
+      renderLeaderboardList(allTimeLeaderboard, leaderboardSeed.allTime);
+    }
+
+    function renderLeaderboardList(container, rows) {
+      const ranked = [...rows].sort((a, b) => b.points - a.points).slice(0, 5);
+      container.innerHTML = ranked.map((row, index) => `
+        <div class="leaderboard-row">
+          <span>${index + 1}</span>
+          <span>${escapeHtml(row.name)}</span>
+          <strong>${row.points}</strong>
+        </div>
+      `).join("");
+    }
+
+    function updateLeaderboards() {
+      state.players.forEach((player) => {
+        const kind = player.kind === "human" ? "human" : "table opponent";
+        upsertLeaderboardRow(leaderboardSeed.weekly, player.name, kind, player.score);
+        upsertLeaderboardRow(leaderboardSeed.allTime, player.name, kind, player.score);
+      });
+      renderLeaderboards();
+    }
+
+    function upsertLeaderboardRow(rows, name, kind, points) {
+      const existing = rows.find((row) => normalize(row.name) === normalize(name));
+      if (existing) {
+        existing.points += Math.max(0, points);
+        existing.kind = kind;
+        return;
+      }
+      rows.push({ name, kind, points: Math.max(0, points) });
+    }
+
+    function resetToSetup() {
+      resultModal.classList.remove("is-open");
+      endConfirmModal.classList.remove("is-open");
+      gameView.classList.remove("is-live");
+      setupView.classList.remove("hidden");
+      leaderboardView.classList.remove("hidden");
+      clearTimeout(state.botTimer);
+      renderPlayerFields();
+      renderLeaderboards();
+    }
+
+    playerCount.addEventListener("change", renderPlayerFields);
+    primaryPlayer.addEventListener("input", renderPlayerFields);
+    humanCount.addEventListener("change", renderPlayerFields);
+    setupForm.addEventListener("submit", startRoom);
+    answerForm.addEventListener("submit", submitGuess);
+    answerTools.addEventListener("click", (event) => {
+      const choice = event.target.closest("[data-answer]");
+      if (choice) submitAnswer(choice.dataset.answer);
+
+      const sequence = event.target.closest("[data-sequence]");
+      if (sequence) {
+        state.sequenceSelection.push(sequence.dataset.sequence);
+        render();
+      }
+
+      if (event.target.closest("[data-sequence-reset]")) {
+        state.sequenceSelection = [];
+        render();
+      }
+
+      if (event.target.closest("[data-sequence-submit]")) {
+        if (state.sequenceSelection.length !== current().items.length) {
+          setFeedback("Finish the full sequence before submitting.", "bad");
+          return;
+        }
+        submitAnswer([...state.sequenceSelection]);
+      }
+
+      if (event.target.closest("[data-matching-submit]")) {
+        const matches = {};
+        let complete = true;
+        answerTools.querySelectorAll("[data-match-left]").forEach((select) => {
+          if (!select.value) complete = false;
+          matches[select.dataset.matchLeft] = select.value;
+        });
+        if (!complete) {
+          setFeedback("Complete every match before submitting.", "bad");
+          return;
+        }
+        submitAnswer(matches);
+      }
+    });
+    activateClueButton.addEventListener("click", () => activateClue());
+    clueList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-clue-index]");
+      if (!button) return;
+      activateClue(Number(button.dataset.clueIndex));
+    });
+    passButton.addEventListener("click", passTurn);
+    skipButton.addEventListener("click", voidQuestion);
+    finishButton.addEventListener("click", openEndConfirm);
+    newRoomButton.addEventListener("click", resetToSetup);
+    closeResults.addEventListener("click", () => resultModal.classList.remove("is-open"));
+    playAgain.addEventListener("click", resetToSetup);
+    cancelEndRoom.addEventListener("click", () => {
+      endConfirmModal.classList.remove("is-open");
+      runBotIfNeeded();
+    });
+    confirmEndRoom.addEventListener("click", resetToSetup);
+    renderPlayerFields();
+    renderLeaderboards();
+  </script>
+</body>
+</html>
