@@ -638,6 +638,22 @@
       text-align: left;
     }
 
+    .choice-button.is-selected,
+    .sequence-button.is-selected,
+    .bot-answer-preview {
+      border-color: rgba(255, 89, 0, .54);
+      background: #fff7f1;
+      color: var(--fg);
+      box-shadow: 0 0 0 3px rgba(255, 89, 0, .10);
+    }
+
+    .bot-answer-preview {
+      padding: 12px;
+      border: 1px solid rgba(255, 89, 0, .34);
+      border-radius: var(--radius-md);
+      font-weight: 850;
+    }
+
     .sequence-build {
       min-height: 48px;
       padding: 12px;
@@ -658,6 +674,12 @@
       grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
       gap: 10px;
       align-items: center;
+    }
+
+    .matching-row.is-selected {
+      padding: 8px;
+      border-radius: var(--radius-md);
+      background: #fff7f1;
     }
 
     .turn-clock {
@@ -990,10 +1012,10 @@
           <div class="pitch" aria-hidden="true"></div>
           <div class="pot-card">
             <div>
-              <p class="label">Current pot</p>
+              <p class="label">Available points</p>
               <strong id="potValue">10</strong>
             </div>
-            <div class="pot-steps" id="potSteps" aria-label="Pot ladder"></div>
+            <div class="pot-steps" id="potSteps" aria-label="Point ladder"></div>
           </div>
           <div class="seats" id="playerSeats"></div>
         </aside>
@@ -1060,7 +1082,9 @@
   </div>
 
   <script>
-    const potLadder = [10, 5, 3, 1];
+    const basePoints = 10;
+    const cluePenalty = 5;
+    const pointLadder = [10, 5];
     const adminName = "Calmriver15";
     const botPool = [
       { name: "Aero47", personality: "safe", avatar: ["#2b8c7f", "#ff5900"], confidence: [0.12, 0.28, 0.42, 0.58], clueBias: 0.72 },
@@ -1165,6 +1189,7 @@
       attemptedSeatIds: new Set(),
       passedSeatIds: new Set(),
       clueUsedSeatIds: new Set(),
+      botSelection: null,
       botTimer: null,
       turnTimer: null,
       turnSeconds: 25,
@@ -1276,10 +1301,11 @@
       state.currentQuestion = 0;
       state.activePlayer = 0;
       state.clueIndex = 0;
-      state.pot = potLadder[0];
+      state.pot = basePoints;
       state.attemptedSeatIds = new Set();
       state.passedSeatIds = new Set();
       state.clueUsedSeatIds = new Set();
+      state.botSelection = null;
       state.sequenceSelection = [];
       state.isFinished = false;
       setupView.classList.add("hidden");
@@ -1330,7 +1356,7 @@
           id: `${normalize(question.prompt).slice(0, 36).replace(/\s/g, "-")}-clue-${index + 1}`,
           text: clue,
           revealOrder: index + 1,
-          potAfterReveal: potLadder[index + 1]
+          potAfterReveal: basePoints - cluePenalty
         }))
       };
     }
@@ -1367,12 +1393,13 @@
       turnLine.textContent = `${player.name} is on the clock`;
       categoryTag.textContent = `${question.league} · ${formatType(question.type)} · L${question.difficulty}`;
       questionPrompt.textContent = question.prompt;
+      state.pot = pointsForPlayer(player);
       potValue.textContent = state.pot;
       feedback.textContent = "";
       feedback.className = "feedback";
       answerInput.value = "";
 
-      potSteps.innerHTML = potLadder.map((value) => (
+      potSteps.innerHTML = pointLadder.map((value) => (
         `<span class="pot-step ${value === state.pot ? "is-current" : ""}">${value}</span>`
       )).join("");
 
@@ -1394,7 +1421,7 @@
         const isNextClue = index === state.clueIndex && !clueUsed;
         const isPastLocked = index < state.clueIndex && !revealed;
         const rowClass = revealed ? "is-revealed is-used" : isNextClue ? "is-current" : isPastLocked ? "is-used" : "is-locked";
-        const buttonLabel = revealed ? "Revealed" : isNextClue ? `Activate clue: pot becomes ${clue.potAfterReveal}` : "Locked";
+        const buttonLabel = revealed ? "Revealed" : isNextClue ? `Activate clue: answer worth ${clue.potAfterReveal}` : "Locked";
         return `
           <div class="clue ${rowClass}">
             <span class="clue-index">${index + 1}</span>
@@ -1408,7 +1435,7 @@
 
       const clueUsed = state.clueUsedSeatIds.has(player.id);
       activateClueButton.disabled = isBot || clueUsed || state.clueIndex >= 3;
-      activateClueButton.textContent = clueUsed ? "Clue used" : state.clueIndex >= 3 ? "No clues left" : `Activate next clue (${state.pot} -> ${potLadder[state.clueIndex + 1]})`;
+      activateClueButton.textContent = clueUsed ? "Clue used" : state.clueIndex >= 3 ? "No clues left" : `Activate clue (${basePoints} -> ${basePoints - cluePenalty})`;
       answerInput.disabled = isBot;
       answerForm.querySelector("button").disabled = isBot;
       renderAnswerTools(question, isBot);
@@ -1416,26 +1443,38 @@
       skipButton.classList.toggle("hidden", !isAdminRoom);
     }
 
+    function pointsForPlayer(player) {
+      return state.clueUsedSeatIds.has(player.id) ? basePoints - cluePenalty : basePoints;
+    }
+
     function renderAnswerTools(question, isBot) {
+      const botSelection = state.botSelection?.playerId === state.players[state.activePlayer]?.id ? state.botSelection.answer : null;
       answerTools.innerHTML = "";
       answerForm.classList.toggle("hidden", !["direct", "fill_blank"].includes(question.type));
       answerInput.placeholder = question.type === "fill_blank" ? "Fill the blank" : "Type your answer";
 
+      if (botSelection && ["direct", "fill_blank"].includes(question.type)) {
+        answerInput.value = formatAnswer(botSelection);
+        answerTools.innerHTML = `<div class="bot-answer-preview">Selected: ${escapeHtml(formatAnswer(botSelection))}</div>`;
+        return;
+      }
+
       if (question.type === "multiple_choice") {
         answerTools.innerHTML = `
           <div class="choice-grid">
-            ${question.options.map((option) => `<button class="button choice-button" type="button" data-answer="${escapeHtml(option)}" ${isBot ? "disabled" : ""}>${escapeHtml(option)}</button>`).join("")}
+            ${question.options.map((option) => `<button class="button choice-button ${normalize(botSelection || "") === normalize(option) ? "is-selected" : ""}" type="button" data-answer="${escapeHtml(option)}" ${isBot ? "disabled" : ""}>${escapeHtml(option)}</button>`).join("")}
           </div>
         `;
         return;
       }
 
       if (question.type === "sequence") {
-        const selected = state.sequenceSelection.join(" > ") || "Build the order by tapping clubs";
+        const selectedItems = Array.isArray(botSelection) ? botSelection : state.sequenceSelection;
+        const selected = selectedItems.join(" > ") || "Build the order by tapping clubs";
         answerTools.innerHTML = `
           <div class="sequence-build">${escapeHtml(selected)}</div>
           <div class="choice-grid">
-            ${question.items.map((item) => `<button class="button sequence-button" type="button" data-sequence="${escapeHtml(item)}" ${isBot || state.sequenceSelection.includes(item) ? "disabled" : ""}>${escapeHtml(item)}</button>`).join("")}
+            ${question.items.map((item) => `<button class="button sequence-button ${selectedItems.includes(item) ? "is-selected" : ""}" type="button" data-sequence="${escapeHtml(item)}" ${isBot || state.sequenceSelection.includes(item) ? "disabled" : ""}>${escapeHtml(item)}</button>`).join("")}
           </div>
           <div class="room-actions">
             <button class="button" type="button" data-sequence-reset ${isBot ? "disabled" : ""}>Reset order</button>
@@ -1449,11 +1488,11 @@
         answerTools.innerHTML = `
           <div class="matching-grid">
             ${question.pairs.map(([left]) => `
-              <label class="matching-row">
+              <label class="matching-row ${botSelection?.[left] ? "is-selected" : ""}">
                 <span>${escapeHtml(left)}</span>
                 <select data-match-left="${escapeHtml(left)}" ${isBot ? "disabled" : ""}>
                   <option value="">Choose match</option>
-                  ${question.options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join("")}
+                  ${question.options.map((option) => `<option value="${escapeHtml(option)}" ${botSelection?.[left] === option ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}
                 </select>
               </label>
             `).join("")}
@@ -1498,12 +1537,14 @@
       stopTurnClock();
       player.attempts += 1;
       state.attemptedSeatIds.add(player.id);
+      state.botSelection = null;
       state.sequenceSelection = [];
       if (isCorrect(question, guess)) {
-        player.score += state.pot;
+        const pointsWon = pointsForPlayer(player);
+        player.score += pointsWon;
         player.correct += 1;
-        addLog(`${player.name} won ${state.pot} with "${formatAnswer(question.answer)}".`);
-        setFeedback(`Correct. ${player.name} wins ${state.pot}.`, "good");
+        addLog(`${player.name} won ${pointsWon} with "${formatAnswer(question.answer)}".`);
+        setFeedback(`Correct. ${player.name} wins ${pointsWon}.`, "good");
         setTimeout(nextQuestion, 650);
         return;
       }
@@ -1554,10 +1595,10 @@
       }
       const clue = current().clues[state.clueIndex];
       state.clueIndex += 1;
-      state.pot = clue.potAfterReveal;
       state.clueUsedSeatIds.add(player.id);
+      state.pot = pointsForPlayer(player);
       player.clues += 1;
-      addLog(`${player.name} activated clue ${state.clueIndex}. Pot is now ${state.pot}.`);
+      addLog(`${player.name} activated clue ${state.clueIndex}. A correct answer is now worth ${state.pot}.`);
       render();
       setFeedback("Clue activated. You can still answer or pass.", "good");
     }
@@ -1567,6 +1608,7 @@
       const player = state.players[state.activePlayer];
       player.passes += 1;
       state.passedSeatIds.add(player.id);
+      state.botSelection = null;
       state.sequenceSelection = [];
       addLog(`${player.name} passed.`);
       advanceToNextEligible();
@@ -1577,6 +1619,7 @@
         voidQuestion();
         return;
       }
+      state.botSelection = null;
       for (let offset = 1; offset <= state.players.length; offset += 1) {
         const nextIndex = (state.activePlayer + offset) % state.players.length;
         const nextPlayer = state.players[nextIndex];
@@ -1597,6 +1640,7 @@
 
     function voidQuestion() {
       stopTurnClock();
+      state.botSelection = null;
       addLog(`Question voided. Answer was "${formatAnswer(current().answer)}".`);
       setFeedback(`Voided. Answer: ${formatAnswer(current().answer)}.`, "bad");
       setTimeout(nextQuestion, 650);
@@ -1609,11 +1653,12 @@
         return;
       }
       state.clueIndex = 0;
-      state.pot = potLadder[0];
+      state.pot = basePoints;
       state.activePlayer = state.currentQuestion % state.players.length;
       state.attemptedSeatIds = new Set();
       state.passedSeatIds = new Set();
       state.clueUsedSeatIds = new Set();
+      state.botSelection = null;
       state.sequenceSelection = [];
       beginTurn();
     }
@@ -1647,6 +1692,7 @@
       if (!player || state.isFinished) return;
       player.passes += 1;
       state.passedSeatIds.add(player.id);
+      state.botSelection = null;
       state.sequenceSelection = [];
       addLog(`${player.name} ran out of time.`);
       advanceToNextEligible();
@@ -1676,10 +1722,10 @@
       const wantsClue = state.clueIndex < 3 && !state.clueUsedSeatIds.has(player.id) && Math.random() < player.clueBias;
       if (wantsClue && Math.random() > confidence) {
         state.clueIndex += 1;
-        state.pot = current().clues[state.clueIndex - 1].potAfterReveal;
         state.clueUsedSeatIds.add(player.id);
+        state.pot = pointsForPlayer(player);
         player.clues += 1;
-        addLog(`${player.name} activated clue ${state.clueIndex}. Pot is now ${state.pot}.`);
+        addLog(`${player.name} activated clue ${state.clueIndex}. A correct answer is now worth ${state.pot}.`);
         render();
         state.botTimer = setTimeout(() => takeBotTurn(player), botAnswerDelay());
         return;
@@ -1689,11 +1735,20 @@
       state.attemptedSeatIds.add(player.id);
       const isBotCorrect = Math.random() < confidence;
       const selectedAnswer = isBotCorrect ? current().answer : botWrongAnswer(current());
+      state.botSelection = { playerId: player.id, answer: selectedAnswer };
       addLog(`${player.name} selected "${formatAnswer(selectedAnswer)}".`);
+      render();
+      state.botTimer = setTimeout(() => resolveBotAnswer(player, selectedAnswer, isBotCorrect), 900);
+    }
+
+    function resolveBotAnswer(player, selectedAnswer, isBotCorrect) {
+      if (state.isFinished || state.players[state.activePlayer]?.id !== player.id) return;
+      state.botSelection = null;
       if (isBotCorrect) {
-        player.score += state.pot;
+        const pointsWon = pointsForPlayer(player);
+        player.score += pointsWon;
         player.correct += 1;
-        addLog(`${player.name} won ${state.pot} with "${formatAnswer(current().answer)}".`);
+        addLog(`${player.name} won ${pointsWon} with "${formatAnswer(current().answer)}".`);
         setTimeout(nextQuestion, 650);
         return;
       }
