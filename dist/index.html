@@ -660,10 +660,35 @@
       align-items: center;
     }
 
+    .turn-clock {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 74px;
+      min-height: 34px;
+      padding: 4px 10px;
+      border-radius: var(--radius-md);
+      color: #fff;
+      background: var(--deep);
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .turn-clock.is-low {
+      background: var(--danger);
+    }
+
     .leaderboard-section {
       display: grid;
       gap: 16px;
       margin: 28px 0 0;
+    }
+
+    .leaderboard-note {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 750;
     }
 
     .leaderboard-grid {
@@ -862,7 +887,7 @@
         <div>
           <p class="kicker">Poker-room style football quiz</p>
           <h1>Enter, take a seat, beat the table.</h1>
-          <p class="subtitle">Register your table name, pick a 2 to 4 seat room, and play humans or personality-driven table opponents. Every question starts at 10 points and every player gets one answer attempt.</p>
+          <p class="subtitle">Register your table name, pick a 2 to 4 seat room, choose your table style, and play a mixed football trivia round. Every question starts at 10 points and every player gets one answer attempt.</p>
         </div>
         <p class="hero-summary">Credits are points only in this prototype. No cash buy-in, no cash-out, no official league marks. Bot response time averages about 7 seconds, with a 5-15 second range.</p>
       </div>
@@ -921,28 +946,29 @@
     </section>
 
     <section class="stats" aria-label="Game rules">
-      <div class="stat-card"><p class="label">Question bank</p><strong>24</strong><span class="tag tag-low">4 leagues</span></div>
-      <div class="stat-card"><p class="label">Seats</p><strong>2-4</strong><span class="tag">Bots backfill</span></div>
+      <div class="stat-card"><p class="label">Question bank</p><strong>100</strong><span class="tag tag-low">4 leagues</span></div>
+      <div class="stat-card"><p class="label">Seats</p><strong>2-4</strong></div>
       <div class="stat-card"><p class="label">Starting score</p><strong>0</strong><span class="tag">Highest wins</span></div>
-      <div class="stat-card"><p class="label">Clue ladder</p><strong>10/5/3/1</strong><span class="tag tag-high">One use each</span></div>
+      <div class="stat-card"><p class="label">Turn clock</p><strong>25s</strong><span class="tag tag-high">Per player</span></div>
     </section>
 
     <section class="leaderboard-section" id="leaderboardView" aria-label="Leaderboards">
       <div class="room-top">
         <div>
           <p class="label">Rankings</p>
-          <h2>Weekly and all-time leaderboard</h2>
+          <h2>Weekly and country leaderboard</h2>
+          <p class="leaderboard-note">Weekly rankings refresh every Sunday at 00:00 EST.</p>
         </div>
         <span class="tag">Top scores</span>
       </div>
       <div class="leaderboard-grid">
         <article class="panel leaderboard-card">
-          <p class="label">This week</p>
+          <p class="label">Weekly</p>
           <div class="leaderboard-list" id="weeklyLeaderboard"></div>
         </article>
         <article class="panel leaderboard-card">
-          <p class="label">All time</p>
-          <div class="leaderboard-list" id="allTimeLeaderboard"></div>
+          <p class="label">Country</p>
+          <div class="leaderboard-list" id="countryLeaderboard"></div>
         </article>
       </div>
     </section>
@@ -978,6 +1004,7 @@
               <p class="label" id="questionProgress">Question 1 of 10</p>
               <h2 class="question-title" id="turnLine">Player is on the clock</h2>
             </div>
+            <span class="turn-clock" id="turnClock">25s</span>
             <span class="tag" id="categoryTag">Category</span>
           </div>
 
@@ -1047,25 +1074,25 @@
     ];
     const leaderboardSeed = {
       weekly: [
-        { name: "Calmriver15", kind: "human", points: 184 },
-        { name: "Kairo19", kind: "table opponent", points: 166 },
-        { name: "Mina64", kind: "table opponent", points: 142 },
-        { name: "NorthStand7", kind: "human", points: 119 },
-        { name: "Zara91", kind: "table opponent", points: 108 }
+        { name: "Calmriver15", country: "United States", points: 0 },
+        { name: "NorthStand7", country: "England", points: 0 },
+        { name: "Azzurri10", country: "Italy", points: 0 },
+        { name: "LaRoja8", country: "Spain", points: 0 },
+        { name: "Werkself4", country: "Germany", points: 0 }
       ],
-      allTime: [
-        { name: "Calmriver15", kind: "human", points: 1280 },
-        { name: "Aero47", kind: "table opponent", points: 1174 },
-        { name: "Tala06", kind: "table opponent", points: 1112 },
-        { name: "FalseNine22", kind: "human", points: 964 },
-        { name: "Rio23", kind: "table opponent", points: 906 }
+      country: [
+        { name: "United States", points: 0 },
+        { name: "England", points: 0 },
+        { name: "Spain", points: 0 },
+        { name: "Italy", points: 0 },
+        { name: "Germany", points: 0 }
       ]
     };
     function q(data) {
       return { aliases: [], options: [], items: [], pairs: [], ...data };
     }
 
-    const questions = [
+    const baseQuestions = [
       q({ type: "direct", league: "Premier League", difficulty: 7, category: "Guess the player", prompt: "Which player became the Premier League's all-time leading goalscorer?", answer: "Alan Shearer", aliases: ["shearer"], clues: ["He scored most of his Premier League goals for Blackburn Rovers and Newcastle United.", "He won the 1994-95 Premier League title.", "His record total is 260 Premier League goals."] }),
       q({ type: "multiple_choice", league: "Premier League", difficulty: 5, category: "Champion", prompt: "Which club won the 2015-16 Premier League title?", answer: "Leicester City", options: ["Tottenham Hotspur", "Arsenal", "Leicester City", "Chelsea"], aliases: ["leicester"], clues: ["They began the season as a huge outsider.", "Claudio Ranieri was their manager.", "Jamie Vardy and Riyad Mahrez were central to the run."] }),
       q({ type: "fill_blank", league: "Premier League", difficulty: 6, category: "Record", prompt: "Fill the blank: Erling Haaland scored ___ Premier League goals in 2022-23.", answer: "36", aliases: ["thirty six", "thirty-six"], clues: ["It set the single-season Premier League record.", "He did it in his first Manchester City season.", "The number is six more than 30."] }),
@@ -1092,6 +1119,42 @@
       q({ type: "multiple_choice", league: "Bundesliga", difficulty: 9, category: "Scoring burst", prompt: "Who scored five Bundesliga goals in nine minutes for Bayern Munich against Wolfsburg in 2015?", answer: "Robert Lewandowski", options: ["Thomas Muller", "Robert Lewandowski", "Mario Gomez", "Arjen Robben"], aliases: ["lewandowski"], clues: ["He came off the bench.", "The opponent was Wolfsburg.", "He later became one of Bayern's greatest scorers."] })
     ];
 
+    function expandQuestionBank(source, targetSize) {
+      const angles = [
+        "Archive room",
+        "Rivalry room",
+        "Record room",
+        "Title-race room",
+        "Stadium room"
+      ];
+      const expanded = [];
+      for (let index = 0; expanded.length < targetSize; index += 1) {
+        const base = source[index % source.length];
+        const cycle = Math.floor(index / source.length);
+        const angle = angles[cycle % angles.length];
+        const clone = {
+          ...base,
+          id: `q-${index + 1}`,
+          category: cycle === 0 ? base.category : `${base.category} · ${angle}`,
+          difficulty: Math.max(3, Math.min(10, base.difficulty + ((cycle % 3) - 1))),
+          prompt: cycle === 0 ? base.prompt : `${base.prompt} (${angle})`,
+          clues: base.clues.map((clue, clueIndex) => (
+            cycle === 0
+              ? clue
+              : `${angle}: ${clue} This narrows the answer through ${base.league} context.`
+          )),
+          options: [...(base.options || [])],
+          items: [...(base.items || [])],
+          pairs: [...(base.pairs || [])],
+          aliases: [...(base.aliases || [])]
+        };
+        expanded.push(clone);
+      }
+      return expanded;
+    }
+
+    const questions = expandQuestionBank(baseQuestions, 100);
+
     const state = {
       players: [],
       deck: [],
@@ -1103,6 +1166,8 @@
       passedSeatIds: new Set(),
       clueUsedSeatIds: new Set(),
       botTimer: null,
+      turnTimer: null,
+      turnSeconds: 25,
       sequenceSelection: [],
       isFinished: false
     };
@@ -1124,6 +1189,7 @@
     const playerSeats = document.querySelector("#playerSeats");
     const questionProgress = document.querySelector("#questionProgress");
     const turnLine = document.querySelector("#turnLine");
+    const turnClock = document.querySelector("#turnClock");
     const categoryTag = document.querySelector("#categoryTag");
     const questionPrompt = document.querySelector("#questionPrompt");
     const answerTools = document.querySelector("#answerTools");
@@ -1145,7 +1211,7 @@
     const cancelEndRoom = document.querySelector("#cancelEndRoom");
     const confirmEndRoom = document.querySelector("#confirmEndRoom");
     const weeklyLeaderboard = document.querySelector("#weeklyLeaderboard");
-    const allTimeLeaderboard = document.querySelector("#allTimeLeaderboard");
+    const countryLeaderboard = document.querySelector("#countryLeaderboard");
 
     function normalize(value) {
       return value
@@ -1221,8 +1287,7 @@
       gameView.classList.add("is-live");
       gameLog.innerHTML = "";
       addLog(`Room opened. Scores start at 0; ${botPlayers.length} table opponents filled empty seats.`);
-      render();
-      runBotIfNeeded();
+      beginTurn();
     }
 
     function makePlayer(name, kind, index, isAdmin = false, botProfile = null) {
@@ -1430,6 +1495,7 @@
         setFeedback("This player has already used their opportunity on this question.", "bad");
         return;
       }
+      stopTurnClock();
       player.attempts += 1;
       state.attemptedSeatIds.add(player.id);
       state.sequenceSelection = [];
@@ -1451,6 +1517,24 @@
       if (Array.isArray(value)) return value.join(" > ");
       if (typeof value === "object") return Object.entries(value).map(([left, right]) => `${left}: ${right}`).join(", ");
       return value;
+    }
+
+    function botWrongAnswer(question) {
+      if (question.type === "multiple_choice") {
+        return question.options.find((option) => normalize(option) !== normalize(question.answer)) || "Pass";
+      }
+      if (question.type === "sequence") {
+        return [...question.answer].reverse();
+      }
+      if (question.type === "matching") {
+        const values = Object.values(question.answer).reverse();
+        return Object.keys(question.answer).reduce((guess, left, index) => {
+          guess[left] = values[index] || values[0];
+          return guess;
+        }, {});
+      }
+      if (question.type === "fill_blank") return "No answer";
+      return "Not sure";
     }
 
     function activateClue(requestedIndex = state.clueIndex) {
@@ -1479,6 +1563,7 @@
     }
 
     function passTurn() {
+      stopTurnClock();
       const player = state.players[state.activePlayer];
       player.passes += 1;
       state.passedSeatIds.add(player.id);
@@ -1498,8 +1583,7 @@
         if (!state.attemptedSeatIds.has(nextPlayer.id) && !state.passedSeatIds.has(nextPlayer.id)) {
           state.activePlayer = nextIndex;
           state.sequenceSelection = [];
-          render();
-          runBotIfNeeded();
+          beginTurn();
           return;
         }
       }
@@ -1512,6 +1596,7 @@
     }
 
     function voidQuestion() {
+      stopTurnClock();
       addLog(`Question voided. Answer was "${formatAnswer(current().answer)}".`);
       setFeedback(`Voided. Answer: ${formatAnswer(current().answer)}.`, "bad");
       setTimeout(nextQuestion, 650);
@@ -1530,8 +1615,41 @@
       state.passedSeatIds = new Set();
       state.clueUsedSeatIds = new Set();
       state.sequenceSelection = [];
+      beginTurn();
+    }
+
+    function beginTurn() {
+      stopTurnClock();
+      state.turnSeconds = 25;
       render();
+      renderTurnClock();
+      state.turnTimer = setInterval(() => {
+        state.turnSeconds -= 1;
+        renderTurnClock();
+        if (state.turnSeconds <= 0) expireTurn();
+      }, 1000);
       runBotIfNeeded();
+    }
+
+    function renderTurnClock() {
+      turnClock.textContent = `${Math.max(0, state.turnSeconds)}s`;
+      turnClock.classList.toggle("is-low", state.turnSeconds <= 5);
+    }
+
+    function stopTurnClock() {
+      clearInterval(state.turnTimer);
+      state.turnTimer = null;
+    }
+
+    function expireTurn() {
+      stopTurnClock();
+      const player = state.players[state.activePlayer];
+      if (!player || state.isFinished) return;
+      player.passes += 1;
+      state.passedSeatIds.add(player.id);
+      state.sequenceSelection = [];
+      addLog(`${player.name} ran out of time.`);
+      advanceToNextEligible();
     }
 
     function runBotIfNeeded() {
@@ -1566,9 +1684,13 @@
         state.botTimer = setTimeout(() => takeBotTurn(player), botAnswerDelay());
         return;
       }
+      stopTurnClock();
       player.attempts += 1;
       state.attemptedSeatIds.add(player.id);
-      if (Math.random() < confidence) {
+      const isBotCorrect = Math.random() < confidence;
+      const selectedAnswer = isBotCorrect ? current().answer : botWrongAnswer(current());
+      addLog(`${player.name} selected "${formatAnswer(selectedAnswer)}".`);
+      if (isBotCorrect) {
         player.score += state.pot;
         player.correct += 1;
         addLog(`${player.name} won ${state.pot} with "${formatAnswer(current().answer)}".`);
@@ -1581,6 +1703,7 @@
 
     function finishRoom() {
       state.isFinished = true;
+      stopTurnClock();
       updateLeaderboards();
       renderStandings();
       resultModal.classList.add("is-open");
@@ -1588,6 +1711,7 @@
 
     function openEndConfirm() {
       clearTimeout(state.botTimer);
+      stopTurnClock();
       endConfirmModal.classList.add("is-open");
     }
 
@@ -1613,7 +1737,7 @@
 
     function renderLeaderboards() {
       renderLeaderboardList(weeklyLeaderboard, leaderboardSeed.weekly);
-      renderLeaderboardList(allTimeLeaderboard, leaderboardSeed.allTime);
+      renderLeaderboardList(countryLeaderboard, leaderboardSeed.country);
     }
 
     function renderLeaderboardList(container, rows) {
@@ -1629,21 +1753,35 @@
 
     function updateLeaderboards() {
       state.players.forEach((player) => {
-        const kind = player.kind === "human" ? "human" : "table opponent";
-        upsertLeaderboardRow(leaderboardSeed.weekly, player.name, kind, player.score);
-        upsertLeaderboardRow(leaderboardSeed.allTime, player.name, kind, player.score);
+        const country = player.isAdmin ? "United States" : player.kind === "bot" ? botCountry(player.name) : "United States";
+        upsertLeaderboardRow(leaderboardSeed.weekly, player.name, country, player.score);
+        upsertLeaderboardRow(leaderboardSeed.country, country, country, player.score);
       });
       renderLeaderboards();
     }
 
-    function upsertLeaderboardRow(rows, name, kind, points) {
+    function upsertLeaderboardRow(rows, name, country, points) {
       const existing = rows.find((row) => normalize(row.name) === normalize(name));
       if (existing) {
         existing.points += Math.max(0, points);
-        existing.kind = kind;
+        existing.country = country;
         return;
       }
-      rows.push({ name, kind, points: Math.max(0, points) });
+      rows.push({ name, country, points: Math.max(0, points) });
+    }
+
+    function botCountry(name) {
+      const countries = {
+        Aero47: "Germany",
+        Luma82: "Spain",
+        Kairo19: "England",
+        Mina64: "Italy",
+        Rio23: "Brazil",
+        Zara91: "France",
+        Niko58: "Germany",
+        Tala06: "Spain"
+      };
+      return countries[name] || "United States";
     }
 
     function resetToSetup() {
@@ -1653,6 +1791,7 @@
       setupView.classList.remove("hidden");
       leaderboardView.classList.remove("hidden");
       clearTimeout(state.botTimer);
+      stopTurnClock();
       renderPlayerFields();
       renderLeaderboards();
     }
@@ -1713,7 +1852,7 @@
     playAgain.addEventListener("click", resetToSetup);
     cancelEndRoom.addEventListener("click", () => {
       endConfirmModal.classList.remove("is-open");
-      runBotIfNeeded();
+      beginTurn();
     });
     confirmEndRoom.addEventListener("click", resetToSetup);
     renderPlayerFields();

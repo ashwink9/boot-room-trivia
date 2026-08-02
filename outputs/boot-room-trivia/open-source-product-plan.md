@@ -20,7 +20,8 @@
 - Activating a clue and passing are separate actions. A player can pass without using a clue, or activate one clue and then choose whether to answer or pass.
 - Bot personality ranges should feel like table archetypes: safe bettor, connection master, shark, whale, and mixed-table blends.
 - Bot answer timing should range from `5` to `15` seconds, averaging close to `7` seconds.
-- Leaderboards rank both humans and table opponents by weekly and all-time points.
+- Leaderboards show Weekly and Country rankings only. Weekly rankings refresh every Sunday at 00:00 EST.
+- Rankings start from zero during QA resets.
 - Credits should remain points-only for the open-source MVP unless legal review approves any paid credits or cash conversion.
 
 ## 1. Site Map
@@ -82,8 +83,7 @@
     Validation queue
   /leaderboards
     Weekly
-    All-time
-    Humans and table opponents
+    Country
     Pack-specific
   /profile/:username
     Public stats
@@ -252,7 +252,7 @@ interface LeaderboardEntry {
   id: string;
   playerId: string;
   playerKind: PlayerKind;
-  scope: "weekly" | "all_time" | "pack";
+  scope: "weekly" | "country" | "pack";
   points: number;
   roomsPlayed: number;
   correctAnswers: number;
@@ -285,7 +285,7 @@ For the current static prototype, no external API is required. For a scalable ve
 - `GET /api/question-packs?league=premier_league|la_liga|serie_a|bundesliga`: filter packs by league.
 - `POST /api/question-packs`: create pack.
 - `POST /api/questions/validate`: validate authored question.
-- `GET /api/leaderboards?scope=weekly|all_time|pack`: fetch leaderboard rankings for humans and table opponents.
+- `GET /api/leaderboards?scope=weekly|country|pack`: fetch leaderboard rankings.
 - `POST /api/leaderboards/recalculate`: admin-only leaderboard rebuild.
 - Realtime channel: `room:{roomId}` for turn changes, clue reveals, attempts, seat joins, bot actions, and results.
 
@@ -360,7 +360,7 @@ For the current static prototype, no external API is required. For a scalable ve
 
 ## 6. Page Templates
 
-- Home / Lobby: first screen has the product identity and `Let's play` CTA. The CTA opens registration: display name first, then seat count, table personality, question count, and pack selection. Below it are compact room cards, league filters, and weekly/all-time leaderboards.
+- Home / Lobby: first screen has the product identity and `Let's play` CTA. The CTA opens registration: display name first, then seat count, table personality, question count, and pack selection. Below it are compact room cards, league filters, and weekly/country leaderboards.
 - Room List: dense list of open rooms with seats, humans present, bots needed, pack, difficulty, and join CTA.
 - Create Room: focused form with seat count, pack, table personality, round length, privacy, and start/join behavior. Local multi-human seat count appears only in admin room setup.
 - Waiting Room: table preview with 2-4 seats, live join state, bot-fill controls, ready states, and room code.
@@ -416,7 +416,7 @@ Most SEO value belongs to public, indexable pages; live rooms and user-specific 
   - Description: `Play {Pack Name}, a {difficulty} football trivia pack with {questionCount} questions across {categories}.`
 - `/leaderboards`
   - Title: `Boot Room Trivia Leaderboards`
-  - Description: `See the top football trivia humans and table opponents across weekly and all-time rooms.`
+  - Description: `See the top football trivia rankings by weekly score and country.`
 - `/docs`
   - Title: `Boot Room Trivia Docs`
   - Description: `Rules, setup guides, API docs, and contribution guidelines for the open-source football trivia game.`
