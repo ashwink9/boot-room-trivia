@@ -2,7 +2,6 @@
 
 A playable prototype for football quiz rooms for the fanatics. Players register a table name, choose a 2-4 seat room, pick a table personality, and play mixed-format football questions against other humans or table opponents.
 
-Live prototype: https://boot-room-trivia-prototype.calmriver15.chatgpt.site
 
 ## First Iteration Scope
 
