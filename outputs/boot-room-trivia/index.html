@@ -1445,7 +1445,7 @@
     </section>
 
     <section class="stats" aria-label="Game rules">
-      <div class="stat-card"><p class="label">Question bank</p><strong>100</strong><span class="tag tag-low">4 leagues</span></div>
+      <div class="stat-card"><p class="label">Question bank</p><strong>240+</strong><span class="tag tag-low">2010-2026 era</span></div>
       <div class="stat-card"><p class="label">Seats</p><strong>2-4</strong></div>
       <div class="stat-card"><p class="label">Starting score</p><strong>0</strong><span class="tag">Highest wins</span></div>
       <div class="stat-card"><p class="label">Turn clock</p><strong>25s</strong><span class="tag tag-high">Per player</span></div>
@@ -1456,7 +1456,7 @@
         <div>
           <p class="label">Rankings</p>
           <h2>Weekly and country leaderboard</h2>
-          <p class="leaderboard-note">Weekly rankings refresh every Sunday at 00:00 EST.</p>
+          <p class="leaderboard-note">Weekly rankings cumulatively add every room score and refresh every Sunday at 00:00 EST.</p>
         </div>
         <span class="tag">Top scores</span>
       </div>
@@ -1620,46 +1620,151 @@
       q({ type: "multiple_choice", league: "Bundesliga", difficulty: 9, category: "Scoring burst", prompt: "Who scored five Bundesliga goals in nine minutes for Bayern Munich against Wolfsburg in 2015?", answer: "Robert Lewandowski", options: ["Thomas Muller", "Robert Lewandowski", "Mario Gomez", "Arjen Robben"], aliases: ["lewandowski"], clues: ["He came off the bench.", "The opponent was Wolfsburg.", "He later became one of Bayern's greatest scorers."] })
     ];
 
-    function expandQuestionBank(source, targetSize) {
-      const angles = [
-        "Archive room",
-        "Rivalry room",
-        "Record room",
-        "Title-race room",
-        "Stadium room"
-      ];
-      const expanded = [];
-      for (let index = 0; expanded.length < targetSize; index += 1) {
-        const base = source[index % source.length];
-        const cycle = Math.floor(index / source.length);
-        const angle = angles[cycle % angles.length];
-        const clone = {
-          ...base,
-          id: `q-${index + 1}`,
-          category: cycle === 0 ? base.category : `${base.category} · ${angle}`,
-          difficulty: Math.max(3, Math.min(10, base.difficulty + ((cycle % 3) - 1))),
-          prompt: cycle === 0 ? base.prompt : `${base.prompt} (${angle})`,
-          clues: base.clues.map((clue, clueIndex) => (
-            cycle === 0
-              ? clue
-              : `${angle}: ${clue} This narrows the answer through ${base.league} context.`
-          )),
-          options: [...(base.options || [])],
-          items: [...(base.items || [])],
-          pairs: [...(base.pairs || [])],
-          aliases: [...(base.aliases || [])]
-        };
-        expanded.push(clone);
-      }
-      return expanded;
+    const supplementalQuestionSeeds = [
+      { league: "Premier League", year: "2011-12", category: "Goals", prompt: "Which Manchester City striker scored the stoppage-time goal that sealed the 2011-12 Premier League title?", answer: "Sergio Aguero", options: ["Sergio Aguero", "Carlos Tevez", "Mario Balotelli", "Edin Dzeko"], aliases: ["aguero", "sergio agüero"], clues: ["The moment is remembered for a famous long commentator shout.", "The match was against QPR.", "He wore number 16 for Manchester City."] },
+      { league: "Premier League", year: "2013-14", category: "Assists", prompt: "Which Liverpool striker led the Premier League for assists in 2013-14 while also winning the Golden Boot?", answer: "Luis Suarez", options: ["Luis Suarez", "Daniel Sturridge", "Steven Gerrard", "Eden Hazard"], aliases: ["suarez", "luis suárez"], clues: ["He formed a high-scoring partnership with Daniel Sturridge.", "Liverpool finished second that season.", "He later moved to Barcelona."] },
+      { league: "Premier League", year: "2015-16", category: "Defence", prompt: "Which Leicester City midfielder became a symbol of ball-winning defence in their 2015-16 title season?", answer: "N'Golo Kante", options: ["N'Golo Kante", "Danny Drinkwater", "Riyad Mahrez", "Marc Albrighton"], aliases: ["kante", "n'golo kanté", "ngolo kante"], clues: ["He joined Chelsea after the title.", "His energy and interceptions defined Leicester's midfield.", "He later won the World Cup with France."] },
+      { league: "Premier League", year: "2017-18", category: "Team stats", prompt: "Which team became known as the Premier League Centurions in 2017-18?", answer: "Manchester City", options: ["Manchester City", "Liverpool", "Chelsea", "Tottenham Hotspur"], aliases: ["man city", "city"], clues: ["They reached 100 points.", "Pep Guardiola was manager.", "Gabriel Jesus scored late on the final day."] },
+      { league: "Premier League", year: "2019-20", category: "Coach", prompt: "Which manager ended Liverpool's 30-year wait for an English league title in 2019-20?", answer: "Jurgen Klopp", options: ["Jurgen Klopp", "Brendan Rodgers", "Rafael Benitez", "Kenny Dalglish"], aliases: ["klopp", "jürgen klopp"], clues: ["He built a pressing team around Salah, Mane and Firmino.", "Liverpool won the Champions League the season before.", "He is German."] },
+      { league: "Premier League", year: "2022-23", category: "Offence", prompt: "Which club won the 2022-23 Premier League as part of a treble season?", answer: "Manchester City", options: ["Manchester City", "Arsenal", "Manchester United", "Newcastle United"], aliases: ["man city"], clues: ["They also won the FA Cup and Champions League.", "Erling Haaland was central to the attack.", "Their manager was Pep Guardiola."] },
+      { league: "Premier League", year: "2025-26", category: "World news", prompt: "Which club were confirmed as 2025-26 Premier League champions after a 22-year wait?", answer: "Arsenal", options: ["Arsenal", "Manchester City", "Liverpool", "Chelsea"], aliases: ["arsenal fc"], clues: ["The wait was measured from the Invincibles era.", "Mikel Arteta led the side.", "They lifted the trophy after a final-day win at Crystal Palace."] },
+      { league: "La Liga", year: "2011-12", category: "Team stats", prompt: "Which Real Madrid manager led the club to a 100-point La Liga season in 2011-12?", answer: "Jose Mourinho", options: ["Jose Mourinho", "Carlo Ancelotti", "Zinedine Zidane", "Manuel Pellegrini"], aliases: ["mourinho", "josé mourinho"], clues: ["The side scored heavily with Cristiano Ronaldo central.", "The manager had arrived from Inter.", "His nickname is tied to being special."] },
+      { league: "La Liga", year: "2012-13", category: "Goals", prompt: "Which player scored 46 La Liga goals in 2012-13 for Barcelona?", answer: "Lionel Messi", options: ["Lionel Messi", "Cristiano Ronaldo", "Radamel Falcao", "Neymar"], aliases: ["messi"], clues: ["He played for Barcelona.", "He wore number 10.", "He is Argentina's most famous modern forward."] },
+      { league: "La Liga", year: "2013-14", category: "Coach", prompt: "Which coach led Atletico Madrid to the 2013-14 La Liga title?", answer: "Diego Simeone", options: ["Diego Simeone", "Unai Emery", "Luis Enrique", "Tata Martino"], aliases: ["simeone"], clues: ["His team drew at Camp Nou to secure it.", "He is Argentine.", "Atletico's style was compact and combative."] },
+      { league: "La Liga", year: "2014-15", category: "Offence", prompt: "Which attacking trio was associated with Barcelona's 2014-15 treble?", answer: "MSN", options: ["MSN", "BBC", "MVP", "SAS"], aliases: ["messi suarez neymar", "messi suárez neymar"], clues: ["The initials stand for Messi, Suarez and Neymar.", "They won the Champions League in Berlin.", "Luis Enrique was manager."] },
+      { league: "La Liga", year: "2019-20", category: "Defence", prompt: "Which goalkeeper was a major defensive figure for Real Madrid in their 2019-20 La Liga title?", answer: "Thibaut Courtois", options: ["Thibaut Courtois", "Jan Oblak", "Marc-Andre ter Stegen", "Keylor Navas"], aliases: ["courtois"], clues: ["He is Belgian.", "He had joined Real Madrid from Chelsea.", "He later starred in a Champions League final."] },
+      { league: "La Liga", year: "2020-21", category: "Team story", prompt: "Which Madrid club won La Liga in 2020-21?", answer: "Atletico Madrid", options: ["Atletico Madrid", "Real Madrid", "Getafe", "Rayo Vallecano"], aliases: ["atletico", "atlético madrid"], clues: ["Luis Suarez scored important goals for them.", "Diego Simeone was manager.", "They play in red and white."] },
+      { league: "La Liga", year: "2023-24", category: "Individual contribution", prompt: "Which English midfielder became central to Real Madrid's 2023-24 La Liga and Champions League season?", answer: "Jude Bellingham", options: ["Jude Bellingham", "Declan Rice", "Phil Foden", "Mason Mount"], aliases: ["bellingham"], clues: ["He joined from Borussia Dortmund.", "He scored several late goals early in the season.", "He wears number 5 for Real Madrid."] },
+      { league: "Serie A", year: "2011-12", category: "Defence", prompt: "Which club went unbeaten in Serie A in 2011-12 under Antonio Conte?", answer: "Juventus", options: ["Juventus", "AC Milan", "Inter Milan", "Napoli"], aliases: ["juve"], clues: ["It began a long title streak.", "They play in Turin.", "Their defence included the BBC back line."] },
+      { league: "Serie A", year: "2015-16", category: "Goals", prompt: "Which Napoli striker scored 36 Serie A goals in 2015-16?", answer: "Gonzalo Higuain", options: ["Gonzalo Higuain", "Edin Dzeko", "Mauro Icardi", "Paulo Dybala"], aliases: ["higuain", "gonzalo higuaín"], clues: ["He later moved to Juventus.", "The total broke a modern Serie A scoring mark.", "He is Argentine."] },
+      { league: "Serie A", year: "2019-20", category: "Offence", prompt: "Which Lazio striker won the European Golden Shoe in 2019-20?", answer: "Ciro Immobile", options: ["Ciro Immobile", "Cristiano Ronaldo", "Romelu Lukaku", "Duvan Zapata"], aliases: ["immobile"], clues: ["He played for Lazio.", "He is Italian.", "His goal total was 36 in Serie A."] },
+      { league: "Serie A", year: "2020-21", category: "Coach", prompt: "Which coach led Inter Milan to the 2020-21 Serie A title?", answer: "Antonio Conte", options: ["Antonio Conte", "Simone Inzaghi", "Massimiliano Allegri", "Luciano Spalletti"], aliases: ["conte"], clues: ["He had previously won titles with Juventus.", "Romelu Lukaku was important to the team.", "He is known for back-three systems."] },
+      { league: "Serie A", year: "2021-22", category: "Team story", prompt: "Which club won Serie A in 2021-22, ending an 11-year Scudetto wait?", answer: "AC Milan", options: ["AC Milan", "Inter Milan", "Napoli", "Roma"], aliases: ["milan"], clues: ["Stefano Pioli was manager.", "Rafael Leao was a key attacker.", "Their rivals had won the previous season."] },
+      { league: "Serie A", year: "2022-23", category: "World news", prompt: "Which club's 2022-23 Serie A title triggered huge celebrations in Naples?", answer: "Napoli", options: ["Napoli", "Lazio", "Atalanta", "Fiorentina"], aliases: ["ssc napoli"], clues: ["Victor Osimhen and Khvicha Kvaratskhelia were major figures.", "Luciano Spalletti was manager.", "It was their first league title since the Maradona era."] },
+      { league: "Serie A", year: "2023-24", category: "Coach", prompt: "Which coach led Inter Milan to the 2023-24 Serie A title?", answer: "Simone Inzaghi", options: ["Simone Inzaghi", "Antonio Conte", "Stefano Pioli", "Jose Mourinho"], aliases: ["inzaghi"], clues: ["His side reached the 2023 Champions League final.", "Inter clinched the second star in this period.", "He previously coached Lazio."] },
+      { league: "Bundesliga", year: "2011-12", category: "Team story", prompt: "Which club won the Bundesliga in 2011-12 under Jurgen Klopp?", answer: "Borussia Dortmund", options: ["Borussia Dortmund", "Bayern Munich", "Schalke", "Werder Bremen"], aliases: ["dortmund", "bvb"], clues: ["They wore yellow and black.", "Robert Lewandowski was part of the attack.", "They also won the DFB-Pokal that season."] },
+      { league: "Bundesliga", year: "2012-13", category: "Offence", prompt: "Which Bayern Munich winger duo was widely known as Robbery?", answer: "Robben and Ribery", options: ["Robben and Ribery", "Muller and Gomez", "Lahm and Schweinsteiger", "Kroos and Mandzukic"], aliases: ["robben ribery", "arjen robben franck ribery", "robben and ribéry"], clues: ["One was Dutch, the other French.", "They were central to Bayern's treble.", "The nickname blends their surnames."] },
+      { league: "Bundesliga", year: "2015-16", category: "Goals", prompt: "Which striker scored five goals in nine minutes for Bayern against Wolfsburg?", answer: "Robert Lewandowski", options: ["Robert Lewandowski", "Thomas Muller", "Mario Gomez", "Pierre-Emerick Aubameyang"], aliases: ["lewandowski"], clues: ["He came off the bench.", "The year was 2015.", "He later broke Gerd Muller's single-season scoring record."] },
+      { league: "Bundesliga", year: "2020-21", category: "Goals", prompt: "Whose Bundesliga single-season goals record did Robert Lewandowski break in 2020-21?", answer: "Gerd Muller", options: ["Gerd Muller", "Uwe Seeler", "Klaus Fischer", "Jupp Heynckes"], aliases: ["muller", "müller", "gerd müller"], clues: ["The old record stood for decades.", "He was nicknamed Der Bomber.", "He is a Bayern legend."] },
+      { league: "Bundesliga", year: "2023-24", category: "Defence", prompt: "Which club completed the 2023-24 Bundesliga season unbeaten?", answer: "Bayer Leverkusen", options: ["Bayer Leverkusen", "Bayern Munich", "Borussia Dortmund", "RB Leipzig"], aliases: ["leverkusen", "bayer 04"], clues: ["Xabi Alonso was manager.", "They won their first Bundesliga title.", "Their nickname includes Werkself."] },
+      { league: "Bundesliga", year: "2023-24", category: "Coach", prompt: "Which coach led Bayer Leverkusen to the 2023-24 Bundesliga title?", answer: "Xabi Alonso", options: ["Xabi Alonso", "Thomas Tuchel", "Julian Nagelsmann", "Edin Terzic"], aliases: ["alonso"], clues: ["He previously played for Liverpool, Real Madrid and Bayern.", "His Leverkusen team became unbeaten champions.", "He is Spanish."] },
+      { league: "European football", year: "2010-2026", category: "World news", prompt: "Which technology became one of the biggest football talking points in European leagues after its rollout in the late 2010s?", answer: "VAR", options: ["VAR", "Goal-line netting", "Sin bins", "Silver goal"], aliases: ["video assistant referee", "video assistant referees"], clues: ["It reviews goals, penalties, red cards and mistaken identity.", "Its use has been debated by fans and coaches.", "The abbreviation has three letters."] },
+      { league: "European football", year: "2010-2026", category: "World news", prompt: "Which 2020 global event caused European leagues to pause and later restart behind closed doors?", answer: "COVID-19 pandemic", options: ["COVID-19 pandemic", "Iceland volcano", "Euro 2020 final", "Brexit referendum"], aliases: ["covid", "covid pandemic", "coronavirus pandemic"], clues: ["Matches resumed without normal crowds.", "Schedules moved into summer.", "It affected sport worldwide."] },
+      { league: "European football", year: "2010-2026", category: "Transfers", prompt: "Which 2017 transfer from Barcelona to Paris Saint-Germain reset the world-record fee discussion?", answer: "Neymar", options: ["Neymar", "Kylian Mbappe", "Philippe Coutinho", "Ousmane Dembele"], aliases: ["neymar jr"], clues: ["He moved from Spain to France.", "The fee was tied to a release clause.", "He had been part of Barcelona's MSN trio."] },
+      { league: "European football", year: "2010-2026", category: "Individual contribution", prompt: "Which Croatian midfielder won the 2018 Ballon d'Or after starring for Real Madrid and Croatia?", answer: "Luka Modric", options: ["Luka Modric", "Ivan Rakitic", "Toni Kroos", "Andres Iniesta"], aliases: ["modric", "luka modrić"], clues: ["He helped Croatia reach the 2018 World Cup final.", "He played for Real Madrid.", "He broke the Messi-Ronaldo Ballon d'Or run."] },
+      { league: "European football", year: "2010-2026", category: "Coach", prompt: "Which manager won Champions League titles with Real Madrid in 2016, 2017 and 2018?", answer: "Zinedine Zidane", options: ["Zinedine Zidane", "Carlo Ancelotti", "Jose Mourinho", "Rafael Benitez"], aliases: ["zidane"], clues: ["He was also a legendary midfielder.", "Real Madrid won three straight Champions Leagues under him.", "He is French."] }
+    ];
+
+    function withId(question, prefix, index) {
+      return { ...question, id: `${prefix}-${index + 1}` };
     }
 
-    const questions = expandQuestionBank(baseQuestions, 100);
+    function makeFillBlank(seed, index) {
+      return q({
+        type: "fill_blank",
+        league: seed.league,
+        difficulty: Math.max(3, Math.min(10, 5 + (index % 5))),
+        category: `${seed.category} · ${seed.year}`,
+        prompt: `Fill the blank (${seed.year}): The answer to this ${seed.league} ${seed.category.toLowerCase()} clue is ___: ${seed.clues[0]}`,
+        answer: seed.answer,
+        aliases: seed.aliases || [],
+        clues: seed.clues
+      });
+    }
+
+    function makeDirect(seed, index) {
+      return q({
+        type: "direct",
+        league: seed.league,
+        difficulty: Math.max(3, Math.min(10, 6 + (index % 4))),
+        category: `${seed.category} · ${seed.year}`,
+        prompt: `${seed.prompt} (${seed.year})`,
+        answer: seed.answer,
+        aliases: seed.aliases || [],
+        clues: seed.clues
+      });
+    }
+
+    function makeMultipleChoice(seed, index) {
+      return q({
+        type: "multiple_choice",
+        league: seed.league,
+        difficulty: Math.max(3, Math.min(10, 4 + (index % 6))),
+        category: `${seed.category} · ${seed.year}`,
+        prompt: `${seed.prompt} (${seed.year})`,
+        answer: seed.answer,
+        options: seed.options,
+        aliases: seed.aliases || [],
+        clues: seed.clues
+      });
+    }
+
+    function buildQuestionBank(targetSize) {
+      const bank = baseQuestions.map((question, index) => withId(question, "core", index));
+      supplementalQuestionSeeds.forEach((seed, index) => {
+        bank.push(withId(makeMultipleChoice(seed, index), "era-mc", index));
+        bank.push(withId(makeDirect(seed, index), "era-direct", index));
+        if (index % 3 === 0) bank.push(withId(makeFillBlank(seed, index), "era-fill", index));
+      });
+      const leagueGroups = {
+        "Premier League": ["Arsenal", "Manchester City", "Liverpool", "Chelsea"],
+        "La Liga": ["Real Madrid", "Barcelona", "Atletico Madrid", "Sevilla"],
+        "Serie A": ["Juventus", "Inter Milan", "AC Milan", "Napoli"],
+        "Bundesliga": ["Bayern Munich", "Borussia Dortmund", "Bayer Leverkusen", "RB Leipzig"]
+      };
+      Object.entries(leagueGroups).forEach(([league, clubs], index) => {
+        bank.push(withId(q({
+          type: "sequence",
+          league,
+          difficulty: 7,
+          category: "Team stats · 2010-2026",
+          prompt: `Arrange these ${league} clubs by broad 2010-2026 era title influence, highest to lowest.`,
+          answer: clubs,
+          items: shuffle(clubs),
+          clues: ["Think about league-title dominance first.", "The first club listed should be the era's strongest title reference.", "The final answer is an ordered list, not a single club."]
+        }), "era-sequence", index));
+      });
+      const matchSets = [
+        { league: "Premier League", category: "Coach map · 2010-2026", answer: { "Pep Guardiola": "Manchester City", "Jurgen Klopp": "Liverpool", "Mikel Arteta": "Arsenal" } },
+        { league: "La Liga", category: "Coach map · 2010-2026", answer: { "Diego Simeone": "Atletico Madrid", "Zinedine Zidane": "Real Madrid", "Luis Enrique": "Barcelona" } },
+        { league: "Serie A", category: "Coach map · 2010-2026", answer: { "Antonio Conte": "Inter Milan", "Luciano Spalletti": "Napoli", "Simone Inzaghi": "Inter Milan" } },
+        { league: "Bundesliga", category: "Coach map · 2010-2026", answer: { "Jurgen Klopp": "Borussia Dortmund", "Xabi Alonso": "Bayer Leverkusen", "Hansi Flick": "Bayern Munich" } }
+      ];
+      matchSets.forEach((set, index) => {
+        const pairs = Object.entries(set.answer);
+        bank.push(withId(q({
+          type: "matching",
+          league: set.league,
+          difficulty: 8,
+          category: set.category,
+          prompt: `Match each coach to the club most associated with the 2010-2026 era clue.`,
+          answer: set.answer,
+          pairs,
+          options: [...new Set(Object.values(set.answer))],
+          clues: ["Use title runs and signature teams.", "A coach may be strongly tied to one club even if he managed elsewhere.", "Match the coach to the most relevant club in this game context."]
+        }), "era-match", index));
+      });
+      for (let index = 0; bank.length < targetSize; index += 1) {
+        const seed = supplementalQuestionSeeds[index % supplementalQuestionSeeds.length];
+        const variant = makeMultipleChoice({
+          ...seed,
+          prompt: `In the ${seed.year} ${seed.league} ${seed.category.toLowerCase()} room, which answer fits the clue: ${seed.clues[index % seed.clues.length]}`
+        }, index);
+        bank.push(withId(variant, "era-rotation", index));
+      }
+      return bank.slice(0, targetSize);
+    }
+
+    const questions = buildQuestionBank(240);
+    const questionHistoryKey = "boot-room-trivia-question-history-v2";
+    const leaderboardKeyPrefix = "boot-room-trivia-weekly-leaderboard";
+    const questionHistoryLimit = 100;
 
     const state = {
       players: [],
       deck: [],
       currentQuestion: 0,
+      selectedDeckSize: 10,
       activePlayer: 0,
       clueIndex: 0,
       pot: 10,
@@ -1672,8 +1777,64 @@
       turnSeconds: 25,
       sequenceSelection: [],
       pendingFeedback: null,
+      extraTime: { active: false, contenders: [], batchStart: 0, batchSize: 3 },
       isFinished: false
     };
+
+    function loadJson(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function saveJson(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (error) {
+        // Local storage can be unavailable in strict browser modes; gameplay still works.
+      }
+    }
+
+    function cloneLeaderboards() {
+      return {
+        weekly: leaderboardSeed.weekly.map((row) => ({ ...row })),
+        country: leaderboardSeed.country.map((row) => ({ ...row }))
+      };
+    }
+
+    function weeklyLeaderboardKey() {
+      const now = new Date();
+      const sunday = new Date(now);
+      sunday.setHours(0, 0, 0, 0);
+      sunday.setDate(now.getDate() - now.getDay());
+      return `${leaderboardKeyPrefix}-${sunday.toISOString().slice(0, 10)}`;
+    }
+
+    function loadWeeklyLeaderboards() {
+      const stored = loadJson(weeklyLeaderboardKey(), null);
+      if (stored?.weekly && stored?.country) return stored;
+      return cloneLeaderboards();
+    }
+
+    function saveWeeklyLeaderboards(data) {
+      saveJson(weeklyLeaderboardKey(), data);
+    }
+
+    function selectQuestionDeck(size) {
+      const history = loadJson(questionHistoryKey, []);
+      const historySet = new Set(history);
+      let available = questions.filter((question) => !historySet.has(question.id));
+      if (available.length < size) {
+        available = questions.filter((question) => !history.slice(-Math.floor(questionHistoryLimit / 2)).includes(question.id));
+      }
+      if (available.length < size) available = questions;
+      const selected = shuffle(available).slice(0, size);
+      saveJson(questionHistoryKey, [...history, ...selected.map((question) => question.id)].slice(-questionHistoryLimit));
+      return selected;
+    }
 
     const setupView = document.querySelector("#setupView");
     const setupForm = document.querySelector("#setupForm");
@@ -1775,7 +1936,8 @@
       });
       const botPlayers = makeBots(count - humans);
       state.players = [...humanPlayers, ...botPlayers];
-      state.deck = shuffle(questions).slice(0, deckSize).map(hydrateQuestion);
+      state.selectedDeckSize = deckSize;
+      state.deck = selectQuestionDeck(deckSize).map(hydrateQuestion);
       state.currentQuestion = 0;
       state.activePlayer = 0;
       state.clueIndex = 0;
@@ -1786,12 +1948,13 @@
       state.botSelection = null;
       state.sequenceSelection = [];
       state.pendingFeedback = null;
+      state.extraTime = { active: false, contenders: [], batchStart: 0, batchSize: 3 };
       state.isFinished = false;
       setupView.classList.add("hidden");
       leaderboardView.classList.add("hidden");
       gameView.classList.add("is-live");
       gameLog.innerHTML = "";
-      addLog(`Room opened. Scores start at 0; ${botPlayers.length} table opponents filled empty seats.`);
+      addLog(`Room opened. Scores start at 0; ${botPlayers.length} table opponents filled empty seats. Deck avoids the last ${questionHistoryLimit} local questions where possible.`);
       beginTurn();
     }
 
@@ -1868,7 +2031,9 @@
       const isBot = player.kind === "bot";
       const isAdminRoom = state.players.some((seat) => seat.isAdmin);
       roomTitle.textContent = `${state.players.length}-player table`;
-      questionProgress.textContent = `Question ${state.currentQuestion + 1} of ${state.deck.length}`;
+      questionProgress.textContent = state.extraTime.active
+        ? `Extra time ${state.currentQuestion - state.extraTime.batchStart + 1} of ${state.extraTime.batchSize} · golden goal`
+        : `Question ${state.currentQuestion + 1} of ${state.selectedDeckSize}`;
       turnLine.textContent = `${player.name} is on the clock`;
       categoryTag.textContent = `${question.league} · ${formatType(question.type)} · L${question.difficulty}`;
       questionPrompt.textContent = question.prompt;
@@ -2129,11 +2294,15 @@
       for (let offset = 1; offset <= state.players.length; offset += 1) {
         const nextIndex = (state.activePlayer + offset) % state.players.length;
         const nextPlayer = state.players[nextIndex];
-        if (!state.attemptedSeatIds.has(nextPlayer.id) && !state.passedSeatIds.has(nextPlayer.id)) {
+        if (isEligibleForCurrentRound(nextPlayer) && !state.attemptedSeatIds.has(nextPlayer.id) && !state.passedSeatIds.has(nextPlayer.id)) {
           return nextPlayer;
         }
       }
       return null;
+    }
+
+    function isEligibleForCurrentRound(player) {
+      return !state.extraTime.active || state.extraTime.contenders.includes(player.id);
     }
 
     function advanceToNextEligible() {
@@ -2145,7 +2314,7 @@
       for (let offset = 1; offset <= state.players.length; offset += 1) {
         const nextIndex = (state.activePlayer + offset) % state.players.length;
         const nextPlayer = state.players[nextIndex];
-        if (!state.attemptedSeatIds.has(nextPlayer.id) && !state.passedSeatIds.has(nextPlayer.id)) {
+        if (isEligibleForCurrentRound(nextPlayer) && !state.attemptedSeatIds.has(nextPlayer.id) && !state.passedSeatIds.has(nextPlayer.id)) {
           state.activePlayer = nextIndex;
           state.sequenceSelection = [];
           beginTurn();
@@ -2155,7 +2324,7 @@
     }
 
     function allPlayersDone() {
-      return state.players.every((player) => (
+      return state.players.filter(isEligibleForCurrentRound).every((player) => (
         state.attemptedSeatIds.has(player.id) || state.passedSeatIds.has(player.id)
       ));
     }
@@ -2170,20 +2339,36 @@
 
     function nextQuestion() {
       state.currentQuestion += 1;
+      if (state.extraTime.active && hasExtraTimeLeader()) {
+        finishRoom(true);
+        return;
+      }
       if (state.currentQuestion >= state.deck.length) {
         finishRoom();
         return;
       }
+      resetQuestionState();
+      state.activePlayer = startingPlayerIndex();
+      beginTurn();
+    }
+
+    function resetQuestionState() {
       state.clueIndex = 0;
       state.pot = basePoints;
-      state.activePlayer = state.currentQuestion % state.players.length;
       state.attemptedSeatIds = new Set();
       state.passedSeatIds = new Set();
       state.clueUsedSeatIds = new Set();
       state.botSelection = null;
       state.sequenceSelection = [];
       state.pendingFeedback = null;
-      beginTurn();
+    }
+
+    function startingPlayerIndex() {
+      if (!state.extraTime.active) return state.currentQuestion % state.players.length;
+      const contenders = state.players
+        .map((player, index) => ({ player, index }))
+        .filter(({ player }) => state.extraTime.contenders.includes(player.id));
+      return contenders[(state.currentQuestion - state.extraTime.batchStart) % contenders.length]?.index || 0;
     }
 
     function beginTurn() {
@@ -2292,7 +2477,68 @@
       advanceToNextEligible();
     }
 
-    function finishRoom() {
+    function tiedLeaders(players = state.players) {
+      const ranked = [...players].sort((a, b) => b.score - a.score);
+      const topScore = ranked[0]?.score ?? 0;
+      return ranked.filter((player) => player.score === topScore);
+    }
+
+    function extraTimePlayers() {
+      return state.players.filter((player) => state.extraTime.contenders.includes(player.id));
+    }
+
+    function hasExtraTimeLeader() {
+      if (!state.extraTime.active) return false;
+      return tiedLeaders(extraTimePlayers()).length === 1;
+    }
+
+    function startExtraTime(contenders) {
+      clearTimeout(state.botTimer);
+      stopTurnClock();
+      const extraQuestions = selectQuestionDeck(state.extraTime.batchSize).map(hydrateQuestion);
+      const batchStart = state.deck.length;
+      state.deck.push(...extraQuestions);
+      state.extraTime = {
+        active: true,
+        contenders: contenders.map((player) => player.id),
+        batchStart,
+        batchSize: 3
+      };
+      state.currentQuestion = batchStart;
+      resetQuestionState();
+      state.activePlayer = startingPlayerIndex();
+      addLog(`Golden goal extra time: ${contenders.map((player) => player.name).join(", ")} are tied. Three-question batch begins.`);
+      state.pendingFeedback = { message: `Golden goal: ${contenders.map((player) => player.name).join(", ")} are tied. First clear lead wins.`, kind: "notice" };
+      beginTurn();
+    }
+
+    function extendExtraTime() {
+      const contenders = tiedLeaders(extraTimePlayers());
+      const extraQuestions = selectQuestionDeck(state.extraTime.batchSize).map(hydrateQuestion);
+      const batchStart = state.deck.length;
+      state.deck.push(...extraQuestions);
+      state.extraTime.contenders = contenders.map((player) => player.id);
+      state.extraTime.batchStart = batchStart;
+      state.currentQuestion = batchStart;
+      resetQuestionState();
+      state.activePlayer = startingPlayerIndex();
+      addLog(`Extra time remains tied. Another three-question golden-goal batch begins.`);
+      state.pendingFeedback = { message: "Still tied after extra time. Another golden-goal batch begins.", kind: "notice" };
+      beginTurn();
+    }
+
+    function finishRoom(force = false) {
+      if (!force) {
+        const leaders = state.extraTime.active ? tiedLeaders(extraTimePlayers()) : tiedLeaders();
+        if (leaders.length > 1) {
+          if (state.extraTime.active) {
+            extendExtraTime();
+            return;
+          }
+          startExtraTime(leaders);
+          return;
+        }
+      }
       state.isFinished = true;
       stopTurnClock();
       updateLeaderboards();
@@ -2372,8 +2618,9 @@
     }
 
     function renderLeaderboards() {
-      renderLeaderboardList(weeklyLeaderboard, leaderboardSeed.weekly);
-      renderLeaderboardList(countryLeaderboard, leaderboardSeed.country);
+      const data = loadWeeklyLeaderboards();
+      renderLeaderboardList(weeklyLeaderboard, data.weekly);
+      renderLeaderboardList(countryLeaderboard, data.country);
     }
 
     function renderLeaderboardList(container, rows) {
@@ -2388,11 +2635,13 @@
     }
 
     function updateLeaderboards() {
+      const data = loadWeeklyLeaderboards();
       state.players.forEach((player) => {
         const country = player.isAdmin ? "United States" : player.kind === "bot" ? botCountry(player.name) : "United States";
-        upsertLeaderboardRow(leaderboardSeed.weekly, player.name, country, player.score);
-        upsertLeaderboardRow(leaderboardSeed.country, country, country, player.score);
+        upsertLeaderboardRow(data.weekly, player.name, country, player.score);
+        upsertLeaderboardRow(data.country, country, country, player.score);
       });
+      saveWeeklyLeaderboards(data);
       renderLeaderboards();
     }
 
