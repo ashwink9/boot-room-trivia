@@ -13,6 +13,12 @@
       --surface-alt: #f7fbf7;
       --surface-hover: #edf5ee;
       --fg: #001d12;
+      --plum: #250835;
+      --mauve: #473054;
+      --violet: #ab2fed;
+      --blue: #0283ec;
+      --lavender: #ebe6ee;
+      --blush: #e9bded;
       --deep: #061b12;
       --deep-2: #092418;
       --muted: #769085;
@@ -24,9 +30,10 @@
       --success: #28ad78;
       --warning: #e5bd13;
       --danger: #d83216;
+      --pass: #b7791f;
       --radius-sm: 4px;
       --radius-md: 6px;
-      --radius-lg: 8px;
+      --radius-lg: 12px;
       --shadow-sm: 0 1px 2px rgba(0, 29, 18, .05);
       --shadow-md: 0 18px 44px rgba(0, 29, 18, .10);
       --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -106,36 +113,40 @@
       display: grid;
       grid-template-columns: minmax(0, 1fr) 360px;
       gap: 34px;
-      min-height: 420px;
+      min-height: 560px;
       overflow: hidden;
-      padding: 48px;
-      color: var(--mint);
-      background: var(--deep-2);
-      border: 1px solid rgba(215, 225, 211, .12);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-md);
+      padding: 52px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 16% 22%, rgba(255,255,255,.25), transparent 28%),
+        radial-gradient(circle at 76% 18%, rgba(2,131,236,.24), transparent 28%),
+        linear-gradient(142deg, rgb(186, 89, 255) 0%, rgb(186, 89, 255) 30%, rgb(255, 89, 241) 100%);
+      border: 1px solid rgba(255, 255, 255, .35);
+      border-radius: 16px;
+      box-shadow: rgba(37, 8, 53, .20) 0 24px 64px -12px;
     }
 
     .hero::after {
-      content: "Premier League · La Liga · Serie A · Bundesliga";
+      content: "";
       position: absolute;
-      right: 24px;
-      bottom: 20px;
-      max-width: 320px;
-      color: rgba(215, 225, 211, .12);
-      font-size: 34px;
-      line-height: .96;
-      font-weight: 900;
-      text-transform: uppercase;
+      inset: 0;
+      opacity: .14;
+      background-image:
+        linear-gradient(rgba(255,255,255,.24) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.24) 1px, transparent 1px);
+      background-size: 42px 42px;
       pointer-events: none;
     }
 
     .hero::before {
       content: "";
       position: absolute;
-      inset: 0 auto 0 0;
-      width: 8px;
-      background: var(--accent);
+      inset: 0;
+      background:
+        linear-gradient(90deg, transparent 0 49%, rgba(255,255,255,.22) 49% 51%, transparent 51%),
+        radial-gradient(circle at center, transparent 0 70px, rgba(255,255,255,.22) 71px 73px, transparent 74px);
+      opacity: .28;
+      pointer-events: none;
     }
 
     .hero-copy {
@@ -158,7 +169,10 @@
       text-transform: uppercase;
     }
 
-    .hero .kicker,
+    .hero .kicker {
+      color: rgba(255, 255, 255, .76);
+    }
+
     .table-panel .label,
     .pot-card .label,
     .player-seat .label {
@@ -168,7 +182,7 @@
     h1 {
       max-width: 740px;
       margin: 12px 0 0;
-      color: #f6fff8;
+      color: #fff;
       font-size: clamp(34px, 6vw, 58px);
       line-height: 1.02;
       font-weight: 760;
@@ -178,7 +192,7 @@
     .subtitle {
       max-width: 720px;
       margin: 16px 0 0;
-      color: rgba(215, 225, 211, .78);
+      color: rgba(255, 255, 255, .86);
       font-size: 17px;
     }
 
@@ -186,10 +200,13 @@
       max-width: 760px;
       margin: 0;
       padding: 18px 20px;
-      border-left: 4px solid var(--accent);
-      background: rgba(255, 255, 255, .06);
-      color: #f4fbf1;
+      border: 1px solid rgba(255, 255, 255, .28);
+      border-left: 5px solid #fff;
+      border-radius: 16px;
+      background: rgba(37, 8, 53, .18);
+      color: #fff;
       font-size: 15px;
+      backdrop-filter: blur(12px);
     }
 
     .setup-card,
@@ -211,7 +228,8 @@
       align-content: start;
       padding: 24px;
       color: var(--fg);
-      box-shadow: 0 22px 56px rgba(0, 0, 0, .20);
+      border-color: rgba(235, 230, 238, .92);
+      box-shadow: rgba(37, 8, 53, .20) 0 22px 56px -10px;
     }
 
     .setup-card h2,
@@ -789,14 +807,80 @@
     }
 
     .feedback {
-      min-height: 28px;
+      display: none;
+      min-height: 46px;
       margin: 0;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      background: var(--surface-alt);
       color: var(--muted);
-      font-weight: 750;
+      font-weight: 850;
+      box-shadow: rgba(37, 8, 53, .06) 0 12px 24px -10px;
     }
 
-    .feedback.good { color: var(--success); }
-    .feedback.bad { color: var(--danger); }
+    .feedback.is-visible { display: flex; }
+
+    .feedback::before {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 82px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .feedback.good {
+      border-color: rgba(40, 173, 120, .24);
+      background: #e9fff5;
+      color: #065f46;
+    }
+
+    .feedback.good::before {
+      content: "Correct";
+      background: var(--success);
+    }
+
+    .feedback.pass {
+      border-color: rgba(183, 121, 31, .28);
+      background: #fff8e6;
+      color: #83520a;
+    }
+
+    .feedback.pass::before {
+      content: "Pass";
+      background: var(--pass);
+    }
+
+    .feedback.bad,
+    .feedback.wrong {
+      border-color: rgba(216, 50, 22, .24);
+      background: #fff0ed;
+      color: #9d2411;
+    }
+
+    .feedback.bad::before,
+    .feedback.wrong::before {
+      content: "Wrong";
+      background: var(--danger);
+    }
+
+    .feedback.notice {
+      border-color: rgba(171, 47, 237, .18);
+      background: #fbf5ff;
+      color: var(--mauve);
+    }
+
+    .feedback.notice::before {
+      content: "Table";
+      background: var(--violet);
+    }
 
     .log {
       display: grid;
@@ -854,6 +938,118 @@
     .league-badge--sa .league-badge-dot { background: #66b3ff; }
     .league-badge--bl .league-badge-dot { background: #ff6670; }
 
+    .hero-preview {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 760px);
+      margin-top: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .35);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, .94);
+      color: var(--plum);
+      box-shadow: rgba(37, 8, 53, .20) 0 18px 40px -12px;
+    }
+
+    .preview-chrome {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--lavender);
+      background: #f5f4f5;
+    }
+
+    .preview-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--violet);
+    }
+
+    .preview-dot:nth-child(2) { background: #ff60f0; }
+    .preview-dot:nth-child(3) { background: var(--blue); }
+
+    .preview-title {
+      margin-left: 8px;
+      color: var(--mauve);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .preview-board {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 180px;
+      gap: 18px;
+      padding: 20px;
+      background:
+        linear-gradient(135deg, rgba(222, 202, 255, .55), rgba(187, 207, 228, .38)),
+        #fff;
+    }
+
+    .preview-question {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .preview-question strong {
+      color: var(--plum);
+      font-size: clamp(22px, 3vw, 34px);
+      line-height: 1.05;
+    }
+
+    .preview-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .preview-option {
+      min-height: 38px;
+      padding: 9px 11px;
+      border: 1px solid rgba(37, 8, 53, .12);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--mauve);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .preview-option.is-correct {
+      border-color: rgba(40, 173, 120, .35);
+      background: #e9fff5;
+      color: #04724d;
+      box-shadow: 0 0 0 3px rgba(40, 173, 120, .10);
+    }
+
+    .preview-sidebar {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(37, 8, 53, .90);
+      color: #fff;
+    }
+
+    .preview-score {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .08);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .preview-score.is-live {
+      background: rgba(255, 255, 255, .18);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .20);
+    }
+
     /* League motion in the hero backdrop */
     .hero-footballs {
       position: absolute;
@@ -902,6 +1098,14 @@
       opacity: 0;
     }
 
+    .confetti-particle.is-spark {
+      width: 5px;
+      height: 22px;
+      border-radius: 999px;
+      background: #fff !important;
+      box-shadow: 0 0 16px rgba(255,255,255,.9);
+    }
+
     @keyframes confettiFall {
       0%   { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
       30%  { opacity: 1; }
@@ -919,6 +1123,7 @@
     }
 
     .correct-announcement-text {
+      position: relative;
       padding: 18px 42px;
       border-radius: var(--radius-lg);
       background: linear-gradient(135deg, #28ad78, #16a34a);
@@ -931,6 +1136,21 @@
       box-shadow: 0 8px 32px rgba(40, 173, 120, .4), 0 0 0 4px rgba(255,255,255,.2);
       animation: announceIn 1.2s cubic-bezier(.22, 1, .36, 1) forwards;
     }
+
+    .correct-announcement-text::before,
+    .correct-announcement-text::after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      background: #fff;
+      opacity: .9;
+      animation: sparklePop 1s ease forwards;
+    }
+
+    .correct-announcement-text::before { margin-left: -32px; margin-top: -4px; }
+    .correct-announcement-text::after { margin-left: 18px; margin-top: 10px; animation-delay: .12s; }
 
     .correct-announcement-text small {
       display: block;
@@ -946,6 +1166,12 @@
       40%  { transform: scale(1); opacity: 1; }
       80%  { transform: scale(1); opacity: 1; }
       100% { transform: scale(.9); opacity: 0; }
+    }
+
+    @keyframes sparklePop {
+      0% { transform: scale(.2) rotate(0deg); opacity: 0; }
+      25% { transform: scale(1.2) rotate(45deg); opacity: 1; }
+      100% { transform: scale(.1) rotate(180deg); opacity: 0; }
     }
 
     /* Seat entrance animation */
@@ -1018,6 +1244,10 @@
         grid-template-columns: 1fr;
       }
 
+      .preview-board {
+        grid-template-columns: 1fr;
+      }
+
       .stats {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -1045,6 +1275,28 @@
       .hero {
         min-height: auto;
         padding: 30px 20px 22px;
+      }
+
+      .hero-preview {
+        margin-top: 18px;
+      }
+
+      .preview-options {
+        grid-template-columns: 1fr;
+      }
+
+      .league-strip {
+        gap: 8px;
+      }
+
+      .league-badge {
+        font-size: 11px;
+        padding: 5px 10px;
+      }
+
+      .feedback {
+        align-items: flex-start;
+        flex-direction: column;
       }
 
       .stats {
@@ -1107,6 +1359,32 @@
             <span class="league-badge league-badge--ll"><span class="league-badge-dot"></span>La Liga</span>
             <span class="league-badge league-badge--sa"><span class="league-badge-dot"></span>Serie A</span>
             <span class="league-badge league-badge--bl"><span class="league-badge-dot"></span>Bundesliga</span>
+          </div>
+          <div class="hero-preview" aria-label="Boot Room Trivia quiz preview">
+            <div class="preview-chrome">
+              <span class="preview-dot"></span>
+              <span class="preview-dot"></span>
+              <span class="preview-dot"></span>
+              <span class="preview-title">Boot Room Trivia · Round 4 of 10</span>
+            </div>
+            <div class="preview-board">
+              <div class="preview-question">
+                <p class="label">Live European league quiz</p>
+                <strong>Which club broke Bayern's Bundesliga title streak in 2023-24?</strong>
+                <div class="preview-options">
+                  <span class="preview-option">RB Leipzig</span>
+                  <span class="preview-option is-correct">Bayer Leverkusen</span>
+                  <span class="preview-option">Dortmund</span>
+                  <span class="preview-option">Stuttgart</span>
+                </div>
+              </div>
+              <div class="preview-sidebar">
+                <div class="preview-score is-live"><span>Calmriver15</span><strong>30</strong></div>
+                <div class="preview-score"><span>Kairo19</span><strong>25</strong></div>
+                <div class="preview-score"><span>Luma82</span><strong>20</strong></div>
+                <div class="preview-score"><span>Clue used</span><strong>+5</strong></div>
+              </div>
+            </div>
           </div>
         </div>
         <p class="hero-summary">Four of Europe's top leagues. Mixed question formats: direct answers, multiple choice, fill-the-blank, sequence ordering, and matching pairs. Every question starts at 10 points. Bot response time averages about 7 seconds.</p>
@@ -1732,7 +2010,7 @@
       event.preventDefault();
       const guess = answerInput.value.trim();
       if (!guess) {
-        setFeedback("Type a guess first.", "bad");
+        setFeedback("Type a guess first.", "notice");
         return;
       }
       submitAnswer(guess);
@@ -1742,7 +2020,7 @@
       const question = current();
       const player = state.players[state.activePlayer];
       if (state.attemptedSeatIds.has(player.id) || state.passedSeatIds.has(player.id)) {
-        setFeedback("This player has already used their opportunity on this question.", "bad");
+        setFeedback("This player has already used their opportunity on this question.", "notice");
         return;
       }
       stopTurnClock();
@@ -1764,8 +2042,8 @@
       addLog(`${player.name} missed with "${formatAnswer(guess)}".`);
       const nextPlayer = findNextEligible();
       state.pendingFeedback = nextPlayer
-        ? { message: `${player.name} missed. ${nextPlayer.name} is up next.`, kind: "bad" }
-        : { message: `${player.name} missed. Moving to the next question.`, kind: "bad" };
+        ? { message: `${player.name} missed. ${nextPlayer.name} is up next.`, kind: "wrong" }
+        : { message: `${player.name} missed. Moving to the next question.`, kind: "wrong" };
       advanceToNextEligible();
     }
 
@@ -1810,15 +2088,15 @@
       const player = state.players[state.activePlayer];
       if (player.kind === "bot") return;
       if (requestedIndex !== state.clueIndex) {
-        setFeedback("Clues must be activated in order.", "bad");
+        setFeedback("Clues must be activated in order.", "notice");
         return;
       }
       if (state.clueUsedSeatIds.has(player.id)) {
-        setFeedback("You already activated one clue this question.", "bad");
+        setFeedback("You already activated one clue this question.", "notice");
         return;
       }
       if (state.clueIndex >= 3) {
-        setFeedback("No clues left to activate.", "bad");
+        setFeedback("No clues left to activate.", "notice");
         return;
       }
       const clue = current().clues[state.clueIndex];
@@ -1828,7 +2106,7 @@
       player.clues += 1;
       addLog(`${player.name} activated clue ${state.clueIndex}. A correct answer is now worth ${state.pot}.`);
       render();
-      setFeedback("Clue activated. You can still answer or pass.", "good");
+      setFeedback("Clue activated. You can still answer or pass.", "notice");
     }
 
     function passTurn() {
@@ -1841,8 +2119,8 @@
       addLog(`${player.name} passed.`);
       const nextPlayer = findNextEligible();
       state.pendingFeedback = nextPlayer
-        ? { message: `${player.name} passed. ${nextPlayer.name} is up next.`, kind: "bad" }
-        : { message: `${player.name} passed. Moving to the next question.`, kind: "bad" };
+        ? { message: `${player.name} passed. ${nextPlayer.name} is up next.`, kind: "pass" }
+        : { message: `${player.name} passed. Moving to the next question.`, kind: "pass" };
       advanceToNextEligible();
     }
 
@@ -1885,7 +2163,7 @@
       stopTurnClock();
       state.botSelection = null;
       addLog(`Question voided. Answer was "${formatAnswer(current().answer)}".`);
-      setFeedback(`Voided. Answer: ${formatAnswer(current().answer)}.`, "bad");
+      setFeedback(`Voided. Answer: ${formatAnswer(current().answer)}.`, "notice");
       setTimeout(nextQuestion, 650);
     }
 
@@ -1941,8 +2219,8 @@
       addLog(`${player.name} ran out of time.`);
       const nextPlayer = findNextEligible();
       state.pendingFeedback = nextPlayer
-        ? { message: `${player.name} timed out. ${nextPlayer.name} is up next.`, kind: "bad" }
-        : { message: `${player.name} timed out. Moving to the next question.`, kind: "bad" };
+        ? { message: `${player.name} timed out. ${nextPlayer.name} is up next.`, kind: "pass" }
+        : { message: `${player.name} timed out. Moving to the next question.`, kind: "pass" };
       advanceToNextEligible();
     }
 
@@ -1954,7 +2232,7 @@
         answerInput.focus();
         return;
       }
-      setFeedback(`${player.name} is reading the room.`, "good");
+      setFeedback(`${player.name} is reading the room.`, "notice");
       state.botTimer = setTimeout(() => takeBotTurn(player), botAnswerDelay());
     }
 
@@ -2008,8 +2286,8 @@
       addLog(`${player.name} missed and is out for this question.`);
       const nextPlayer = findNextEligible();
       state.pendingFeedback = nextPlayer
-        ? { message: `${player.name} got it wrong. ${nextPlayer.name} is up next.`, kind: "bad" }
-        : { message: `${player.name} got it wrong. Moving to the next question.`, kind: "bad" };
+        ? { message: `${player.name} got it wrong. ${nextPlayer.name} is up next.`, kind: "wrong" }
+        : { message: `${player.name} got it wrong. Moving to the next question.`, kind: "wrong" };
       advanceToNextEligible();
     }
 
@@ -2044,7 +2322,7 @@
 
     function setFeedback(message, kind) {
       feedback.textContent = message;
-      feedback.className = `feedback ${kind}`;
+      feedback.className = `feedback is-visible ${kind}`;
     }
 
     /* ── Celebration system ── */
@@ -2058,9 +2336,9 @@
       const container = document.createElement("div");
       container.className = "confetti-container";
       const colors = ["#ffd700", "#ff5900", "#28ad78", "#ffffff", "#0ea5e9", "#f97316", "#b366ff"];
-      for (let i = 0; i < 35; i++) {
+      for (let i = 0; i < 54; i++) {
         const particle = document.createElement("div");
-        particle.className = "confetti-particle";
+        particle.className = `confetti-particle ${i % 7 === 0 ? "is-spark" : ""}`;
         particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
         particle.style.left = `${40 + Math.random() * 20}%`;
         particle.style.top = `${30 + Math.random() * 15}%`;
@@ -2176,7 +2454,7 @@
 
       if (event.target.closest("[data-sequence-submit]")) {
         if (state.sequenceSelection.length !== current().items.length) {
-          setFeedback("Finish the full sequence before submitting.", "bad");
+          setFeedback("Finish the full sequence before submitting.", "notice");
           return;
         }
         submitAnswer([...state.sequenceSelection]);
@@ -2190,7 +2468,7 @@
           matches[select.dataset.matchLeft] = select.value;
         });
         if (!complete) {
-          setFeedback("Complete every match before submitting.", "bad");
+          setFeedback("Complete every match before submitting.", "notice");
           return;
         }
         submitAnswer(matches);
