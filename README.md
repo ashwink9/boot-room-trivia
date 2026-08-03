@@ -4,12 +4,19 @@ A playable prototype for football quiz rooms for the fanatics. Players register 
 
 Live prototype: https://boot-room-trivia-prototype.calmriver15.chatgpt.site
 
+## First Iteration Scope
+
+This repository currently represents the first playable product iteration. The goal is to validate the core room format, scoring rules, mixed question types, clue mechanic, and table pacing before introducing real accounts, live multiplayer, persistent data, or production infrastructure.
+
+The prototype is intentionally lightweight: the game runs in the browser from a static HTML file, bot opponents are simulated locally, and leaderboards are seeded UI data for QA.
+
 ## What Is Included
 
 - Single-page playable prototype
 - 2, 3, or 4 seat room setup
 - Human registration flow with admin mode for `Calmriver15`
 - Bot-filled empty seats with personality styles
+- Stronger table-opponent tuning, usually playing near 8/10 difficulty with occasional lower-confidence rounds
 - 5, 10, or 15 question rounds
 - Mixed question formats:
   - direct answer
@@ -26,6 +33,8 @@ Live prototype: https://boot-room-trivia-prototype.calmriver15.chatgpt.site
 - 25-second turn clock
 - Clue activation flow
 - Visible bot answer selections before turn resolution
+- Pass and next-player table state
+- Correct-answer celebration feedback
 
 ## Current Game Rules
 
@@ -42,6 +51,8 @@ Live prototype: https://boot-room-trivia-prototype.calmriver15.chatgpt.site
 ## Prototype Notes
 
 This is an early QA prototype. The leaderboard data is currently simulated and reset for testing. Bot players are intentionally shown as character-plus-number table names, with no explicit bot label in the leaderboard.
+
+The UI and gameplay language are designed to communicate the intended product direction: a fast, social football trivia room centered on major European leagues. It should be treated as a playable concept module, not a finished multiplayer platform.
 
 ## Project Structure
 

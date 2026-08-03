@@ -116,6 +116,20 @@
       box-shadow: var(--shadow-md);
     }
 
+    .hero::after {
+      content: "Premier League · La Liga · Serie A · Bundesliga";
+      position: absolute;
+      right: 24px;
+      bottom: 20px;
+      max-width: 320px;
+      color: rgba(215, 225, 211, .12);
+      font-size: 34px;
+      line-height: .96;
+      font-weight: 900;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
     .hero::before {
       content: "";
       position: absolute;
@@ -487,6 +501,32 @@
     .player-seat.is-active {
       border-color: rgba(255, 89, 0, .58);
       background: rgba(255, 89, 0, .12);
+      box-shadow: 0 0 0 3px rgba(255, 89, 0, .18);
+      animation: seatEntrance .45s cubic-bezier(.22, 1, .36, 1);
+    }
+
+    .player-seat.is-passed {
+      opacity: .52;
+      border-color: rgba(216, 50, 22, .28);
+      background: rgba(216, 50, 22, .06);
+    }
+
+    .player-seat.is-scored {
+      animation: scorePulse .8s ease;
+    }
+
+    .pass-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      background: rgba(216, 50, 22, .14);
+      color: var(--danger);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .02em;
     }
 
     .player-seat h3 {
@@ -777,6 +817,151 @@
 
     .hidden { display: none !important; }
 
+    /* ── League badge strip ── */
+    .league-strip {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .league-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,.18);
+    }
+
+    .league-badge--pl  { background: rgba(61,25,91,.85); color: #e8d5ff; }
+    .league-badge--ll  { background: rgba(238,135,7,.85); color: #fff4e0; }
+    .league-badge--sa  { background: rgba(2,68,148,.85); color: #cde2ff; }
+    .league-badge--bl  { background: rgba(210,5,21,.85); color: #ffd6d9; }
+
+    .league-badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .league-badge--pl .league-badge-dot { background: #b366ff; }
+    .league-badge--ll .league-badge-dot { background: #ffc266; }
+    .league-badge--sa .league-badge-dot { background: #66b3ff; }
+    .league-badge--bl .league-badge-dot { background: #ff6670; }
+
+    /* League motion in the hero backdrop */
+    .hero-footballs {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hero-football {
+      position: absolute;
+      font-size: 28px;
+      opacity: .10;
+      animation: floatBall linear infinite;
+    }
+
+    .hero-football:nth-child(1) { left: 8%; top: 12%; animation-duration: 18s; animation-delay: 0s; font-size: 32px; }
+    .hero-football:nth-child(2) { left: 28%; top: 68%; animation-duration: 22s; animation-delay: -4s; font-size: 22px; }
+    .hero-football:nth-child(3) { left: 55%; top: 20%; animation-duration: 16s; animation-delay: -8s; font-size: 26px; }
+    .hero-football:nth-child(4) { left: 72%; top: 75%; animation-duration: 20s; animation-delay: -2s; font-size: 20px; }
+    .hero-football:nth-child(5) { left: 90%; top: 40%; animation-duration: 24s; animation-delay: -6s; font-size: 30px; }
+
+    @keyframes floatBall {
+      0%   { transform: translateY(0) rotate(0deg); opacity: .10; }
+      25%  { transform: translateY(-18px) rotate(90deg); opacity: .16; }
+      50%  { transform: translateY(0) rotate(180deg); opacity: .10; }
+      75%  { transform: translateY(18px) rotate(270deg); opacity: .16; }
+      100% { transform: translateY(0) rotate(360deg); opacity: .10; }
+    }
+
+    /* Confetti celebration */
+    .confetti-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+      overflow: hidden;
+    }
+
+    .confetti-particle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      animation: confettiFall var(--fall-duration, 1.4s) cubic-bezier(.25,.46,.45,.94) forwards;
+      opacity: 0;
+    }
+
+    @keyframes confettiFall {
+      0%   { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+      30%  { opacity: 1; }
+      100% { transform: translate(var(--drift-x, 60px), var(--drift-y, 420px)) rotate(var(--spin, 720deg)) scale(.3); opacity: 0; }
+    }
+
+    /* Correct answer announcement */
+    .correct-announcement {
+      position: fixed;
+      inset: 0;
+      z-index: 45;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+
+    .correct-announcement-text {
+      padding: 18px 42px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, #28ad78, #16a34a);
+      color: #fff;
+      font-family: var(--font);
+      font-size: clamp(26px, 5vw, 44px);
+      font-weight: 900;
+      letter-spacing: -.01em;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(40, 173, 120, .4), 0 0 0 4px rgba(255,255,255,.2);
+      animation: announceIn 1.2s cubic-bezier(.22, 1, .36, 1) forwards;
+    }
+
+    .correct-announcement-text small {
+      display: block;
+      margin-top: 4px;
+      font-size: 14px;
+      font-weight: 850;
+      opacity: .86;
+    }
+
+    @keyframes announceIn {
+      0%   { transform: scale(.5); opacity: 0; }
+      20%  { transform: scale(1.08); opacity: 1; }
+      40%  { transform: scale(1); opacity: 1; }
+      80%  { transform: scale(1); opacity: 1; }
+      100% { transform: scale(.9); opacity: 0; }
+    }
+
+    /* Seat entrance animation */
+    @keyframes seatEntrance {
+      0%   { transform: scale(.96); box-shadow: 0 0 0 0 rgba(255, 89, 0, 0); }
+      50%  { transform: scale(1.02); box-shadow: 0 0 0 6px rgba(255, 89, 0, .25); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 89, 0, 0); }
+    }
+
+    /* Score pulse animation */
+    @keyframes scorePulse {
+      0%   { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+      30%  { box-shadow: 0 0 16px 4px rgba(255, 215, 0, .5); border-color: rgba(255, 215, 0, .7); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+    }
+
     .modal {
       position: fixed;
       inset: 0;
@@ -905,13 +1090,26 @@
     </div>
 
     <section class="hero" id="setupView">
+      <div class="hero-footballs" aria-hidden="true">
+        <span class="hero-football">⚽</span>
+        <span class="hero-football">⚽</span>
+        <span class="hero-football">⚽</span>
+        <span class="hero-football">⚽</span>
+        <span class="hero-football">⚽</span>
+      </div>
       <div class="hero-copy">
         <div>
-          <p class="kicker">Poker-room style football quiz</p>
-          <h1>Enter, take a seat, beat the table.</h1>
-          <p class="subtitle">Register your table name, pick a 2 to 4 seat room, choose your table style, and play a mixed football trivia round. Every question starts at 10 points and every player gets one answer attempt.</p>
+          <p class="kicker">European Football Trivia</p>
+          <h1>Premier League, La Liga & Serie A Quiz Rooms.</h1>
+          <p class="subtitle">Quiz yourself across Europe's biggest football leagues, including the Premier League, La Liga, Serie A and the Bundesliga. Pick a room, take a seat, and prove you know the beautiful game better than everyone at the table.</p>
+          <div class="league-strip">
+            <span class="league-badge league-badge--pl"><span class="league-badge-dot"></span>Premier League</span>
+            <span class="league-badge league-badge--ll"><span class="league-badge-dot"></span>La Liga</span>
+            <span class="league-badge league-badge--sa"><span class="league-badge-dot"></span>Serie A</span>
+            <span class="league-badge league-badge--bl"><span class="league-badge-dot"></span>Bundesliga</span>
+          </div>
         </div>
-        <p class="hero-summary">Credits are points only in this prototype. No cash buy-in, no cash-out, no official league marks. Bot response time averages about 7 seconds, with a 5-15 second range.</p>
+        <p class="hero-summary">Four of Europe's top leagues. Mixed question formats: direct answers, multiple choice, fill-the-blank, sequence ordering, and matching pairs. Every question starts at 10 points. Bot response time averages about 7 seconds.</p>
       </div>
 
       <form class="setup-card" id="setupForm">
@@ -1087,14 +1285,14 @@
     const pointLadder = [10, 5];
     const adminName = "Calmriver15";
     const botPool = [
-      { name: "Aero47", personality: "safe", avatar: ["#2b8c7f", "#ff5900"], confidence: [0.12, 0.28, 0.42, 0.58], clueBias: 0.72 },
-      { name: "Luma82", personality: "connector", avatar: ["#7d5fff", "#28ad78"], confidence: [0.18, 0.38, 0.54, 0.72], clueBias: 0.66 },
-      { name: "Kairo19", personality: "shark", avatar: ["#0f172a", "#ff5900"], confidence: [0.34, 0.52, 0.68, 0.82], clueBias: 0.44 },
-      { name: "Mina64", personality: "whale", avatar: ["#f97316", "#0ea5e9"], confidence: [0.24, 0.42, 0.58, 0.74], clueBias: 0.38 },
-      { name: "Rio23", personality: "safe", avatar: ["#16a34a", "#0891b2"], confidence: [0.14, 0.3, 0.48, 0.64], clueBias: 0.78 },
-      { name: "Zara91", personality: "connector", avatar: ["#be185d", "#22c55e"], confidence: [0.2, 0.4, 0.58, 0.76], clueBias: 0.62 },
-      { name: "Niko58", personality: "shark", avatar: ["#111827", "#eab308"], confidence: [0.36, 0.54, 0.7, 0.86], clueBias: 0.4 },
-      { name: "Tala06", personality: "whale", avatar: ["#dc2626", "#2563eb"], confidence: [0.22, 0.4, 0.56, 0.72], clueBias: 0.35 }
+      { name: "Aero47", personality: "safe", avatar: ["#2b8c7f", "#ff5900"], confidence: [0.78, 0.84, 0.88, 0.92], clueBias: 0.24 },
+      { name: "Luma82", personality: "connector", avatar: ["#7d5fff", "#28ad78"], confidence: [0.80, 0.86, 0.90, 0.94], clueBias: 0.22 },
+      { name: "Kairo19", personality: "shark", avatar: ["#0f172a", "#ff5900"], confidence: [0.84, 0.89, 0.93, 0.96], clueBias: 0.14 },
+      { name: "Mina64", personality: "whale", avatar: ["#f97316", "#0ea5e9"], confidence: [0.79, 0.85, 0.89, 0.93], clueBias: 0.18 },
+      { name: "Rio23", personality: "safe", avatar: ["#16a34a", "#0891b2"], confidence: [0.77, 0.84, 0.88, 0.92], clueBias: 0.26 },
+      { name: "Zara91", personality: "connector", avatar: ["#be185d", "#22c55e"], confidence: [0.81, 0.86, 0.91, 0.94], clueBias: 0.20 },
+      { name: "Niko58", personality: "shark", avatar: ["#111827", "#eab308"], confidence: [0.85, 0.90, 0.94, 0.97], clueBias: 0.12 },
+      { name: "Tala06", personality: "whale", avatar: ["#dc2626", "#2563eb"], confidence: [0.80, 0.85, 0.90, 0.94], clueBias: 0.18 }
     ];
     const leaderboardSeed = {
       weekly: [
@@ -1194,6 +1392,7 @@
       turnTimer: null,
       turnSeconds: 25,
       sequenceSelection: [],
+      pendingFeedback: null,
       isFinished: false
     };
 
@@ -1307,6 +1506,7 @@
       state.clueUsedSeatIds = new Set();
       state.botSelection = null;
       state.sequenceSelection = [];
+      state.pendingFeedback = null;
       state.isFinished = false;
       setupView.classList.add("hidden");
       leaderboardView.classList.add("hidden");
@@ -1403,17 +1603,24 @@
         `<span class="pot-step ${value === state.pot ? "is-current" : ""}">${value}</span>`
       )).join("");
 
-      playerSeats.innerHTML = state.players.map((player, index) => `
-        <article class="player-seat ${index === state.activePlayer ? "is-active" : ""}" style="--avatar-a:${player.avatar[0]};--avatar-b:${player.avatar[1]}">
+      playerSeats.innerHTML = state.players.map((player, index) => {
+        const isPassed = state.passedSeatIds.has(player.id);
+        const isAttempted = state.attemptedSeatIds.has(player.id);
+        const isActive = index === state.activePlayer;
+        const seatClass = isActive ? "is-active" : isPassed ? "is-passed" : "";
+        const statusLabel = isActive ? "On clock" : isPassed ? '<span class="pass-badge">Passed</span>' : isAttempted ? "Done" : "Waiting";
+        return `
+        <article class="player-seat ${seatClass}" style="--avatar-a:${player.avatar[0]};--avatar-b:${player.avatar[1]}" data-seat-id="${player.id}">
           <span class="avatar" aria-hidden="true">${escapeHtml(player.initials)}</span>
           <div>
-            <p class="label">${index === state.activePlayer ? "On clock" : "Waiting"}</p>
+            <p class="label">${statusLabel}</p>
             <h3>${escapeHtml(player.name)}</h3>
             <span>${escapeHtml(player.personality)} · ${player.correct} correct · ${player.clues} clues · ${player.passes} passes</span>
           </div>
           <strong>${player.score}</strong>
         </article>
-      `).join("");
+      `;
+      }).join("");
 
       clueList.innerHTML = question.clues.map((clue, index) => {
         const revealed = index < state.clueIndex;
@@ -1441,6 +1648,10 @@
       renderAnswerTools(question, isBot);
       passButton.disabled = isBot;
       skipButton.classList.toggle("hidden", !isAdminRoom);
+      if (state.pendingFeedback) {
+        setFeedback(state.pendingFeedback.message, state.pendingFeedback.kind);
+        state.pendingFeedback = null;
+      }
     }
 
     function pointsForPlayer(player) {
@@ -1545,13 +1756,17 @@
         player.correct += 1;
         addLog(`${player.name} won ${pointsWon} with "${formatAnswer(question.answer)}".`);
         setFeedback(`Correct. ${player.name} wins ${pointsWon}.`, "good");
-        setTimeout(nextQuestion, 650);
+        celebrate(player.name, pointsWon, player.id);
+        setTimeout(nextQuestion, 1400);
         return;
       }
 
       addLog(`${player.name} missed with "${formatAnswer(guess)}".`);
+      const nextPlayer = findNextEligible();
+      state.pendingFeedback = nextPlayer
+        ? { message: `${player.name} missed. ${nextPlayer.name} is up next.`, kind: "bad" }
+        : { message: `${player.name} missed. Moving to the next question.`, kind: "bad" };
       advanceToNextEligible();
-      setFeedback("Not quite. The turn moves on.", "bad");
     }
 
     function formatAnswer(value) {
@@ -1562,19 +1777,32 @@
 
     function botWrongAnswer(question) {
       if (question.type === "multiple_choice") {
-        return question.options.find((option) => normalize(option) !== normalize(question.answer)) || "Pass";
+        const wrongOptions = question.options.filter((option) => normalize(option) !== normalize(question.answer));
+        return wrongOptions[Math.floor(Math.random() * wrongOptions.length)] || "Pass";
       }
       if (question.type === "sequence") {
-        return [...question.answer].reverse();
+        const shuffled = [...question.answer];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        if (shuffled.join(">") === question.answer.join(">")) shuffled.reverse();
+        return shuffled;
       }
       if (question.type === "matching") {
-        const values = Object.values(question.answer).reverse();
+        const values = Object.values(question.answer);
+        const shuffledValues = [...values].sort(() => Math.random() - .5);
+        if (shuffledValues.join() === values.join()) shuffledValues.reverse();
         return Object.keys(question.answer).reduce((guess, left, index) => {
-          guess[left] = values[index] || values[0];
+          guess[left] = shuffledValues[index] || shuffledValues[0];
           return guess;
         }, {});
       }
-      if (question.type === "fill_blank") return "No answer";
+      if (question.type === "fill_blank") {
+        const n = Number(question.answer);
+        if (!isNaN(n)) return String(n + (Math.random() < .5 ? -1 : 1) * Math.ceil(Math.random() * 5));
+        return "No answer";
+      }
       return "Not sure";
     }
 
@@ -1611,7 +1839,22 @@
       state.botSelection = null;
       state.sequenceSelection = [];
       addLog(`${player.name} passed.`);
+      const nextPlayer = findNextEligible();
+      state.pendingFeedback = nextPlayer
+        ? { message: `${player.name} passed. ${nextPlayer.name} is up next.`, kind: "bad" }
+        : { message: `${player.name} passed. Moving to the next question.`, kind: "bad" };
       advanceToNextEligible();
+    }
+
+    function findNextEligible() {
+      for (let offset = 1; offset <= state.players.length; offset += 1) {
+        const nextIndex = (state.activePlayer + offset) % state.players.length;
+        const nextPlayer = state.players[nextIndex];
+        if (!state.attemptedSeatIds.has(nextPlayer.id) && !state.passedSeatIds.has(nextPlayer.id)) {
+          return nextPlayer;
+        }
+      }
+      return null;
     }
 
     function advanceToNextEligible() {
@@ -1660,6 +1903,7 @@
       state.clueUsedSeatIds = new Set();
       state.botSelection = null;
       state.sequenceSelection = [];
+      state.pendingFeedback = null;
       beginTurn();
     }
 
@@ -1695,6 +1939,10 @@
       state.botSelection = null;
       state.sequenceSelection = [];
       addLog(`${player.name} ran out of time.`);
+      const nextPlayer = findNextEligible();
+      state.pendingFeedback = nextPlayer
+        ? { message: `${player.name} timed out. ${nextPlayer.name} is up next.`, kind: "bad" }
+        : { message: `${player.name} timed out. Moving to the next question.`, kind: "bad" };
       advanceToNextEligible();
     }
 
@@ -1718,7 +1966,10 @@
 
     function takeBotTurn(player) {
       if (state.isFinished || state.players[state.activePlayer].id !== player.id) return;
-      const confidence = player.confidence[state.clueIndex] || 0;
+      let confidence = player.confidence[state.clueIndex] || 0;
+      // Cold streak: rare table wobble where an otherwise strong bot plays near 5/10.
+      const isCold = Math.random() < 0.15;
+      if (isCold) confidence = 0.50 + Math.random() * 0.06;
       const wantsClue = state.clueIndex < 3 && !state.clueUsedSeatIds.has(player.id) && Math.random() < player.clueBias;
       if (wantsClue && Math.random() > confidence) {
         state.clueIndex += 1;
@@ -1749,10 +2000,16 @@
         player.score += pointsWon;
         player.correct += 1;
         addLog(`${player.name} won ${pointsWon} with "${formatAnswer(current().answer)}".`);
-        setTimeout(nextQuestion, 650);
+        setFeedback(`Correct! ${player.name} wins ${pointsWon}.`, "good");
+        celebrate(player.name, pointsWon, player.id);
+        setTimeout(nextQuestion, 1400);
         return;
       }
       addLog(`${player.name} missed and is out for this question.`);
+      const nextPlayer = findNextEligible();
+      state.pendingFeedback = nextPlayer
+        ? { message: `${player.name} got it wrong. ${nextPlayer.name} is up next.`, kind: "bad" }
+        : { message: `${player.name} got it wrong. Moving to the next question.`, kind: "bad" };
       advanceToNextEligible();
     }
 
@@ -1788,6 +2045,51 @@
     function setFeedback(message, kind) {
       feedback.textContent = message;
       feedback.className = `feedback ${kind}`;
+    }
+
+    /* ── Celebration system ── */
+    function celebrate(playerName, points, seatId) {
+      spawnConfetti();
+      showAnnouncement(playerName, points);
+      pulseScoringPlayer(seatId);
+    }
+
+    function spawnConfetti() {
+      const container = document.createElement("div");
+      container.className = "confetti-container";
+      const colors = ["#ffd700", "#ff5900", "#28ad78", "#ffffff", "#0ea5e9", "#f97316", "#b366ff"];
+      for (let i = 0; i < 35; i++) {
+        const particle = document.createElement("div");
+        particle.className = "confetti-particle";
+        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.left = `${40 + Math.random() * 20}%`;
+        particle.style.top = `${30 + Math.random() * 15}%`;
+        particle.style.width = `${6 + Math.random() * 8}px`;
+        particle.style.height = `${6 + Math.random() * 8}px`;
+        particle.style.borderRadius = Math.random() > .5 ? "50%" : "2px";
+        particle.style.setProperty("--drift-x", `${(Math.random() - .5) * 400}px`);
+        particle.style.setProperty("--drift-y", `${200 + Math.random() * 350}px`);
+        particle.style.setProperty("--spin", `${360 + Math.random() * 720}deg`);
+        particle.style.setProperty("--fall-duration", `${1.1 + Math.random() * .8}s`);
+        container.appendChild(particle);
+      }
+      document.body.appendChild(container);
+      setTimeout(() => container.remove(), 2200);
+    }
+
+    function showAnnouncement(playerName, points) {
+      const overlay = document.createElement("div");
+      overlay.className = "correct-announcement";
+      overlay.innerHTML = `<div class="correct-announcement-text">Correct! +${points}<small>${escapeHtml(playerName)} wins the round</small></div>`;
+      document.body.appendChild(overlay);
+      setTimeout(() => overlay.remove(), 1400);
+    }
+
+    function pulseScoringPlayer(seatId) {
+      const seatEl = document.querySelector(`[data-seat-id="${seatId}"]`);
+      if (!seatEl) return;
+      seatEl.classList.add("is-scored");
+      setTimeout(() => seatEl.classList.remove("is-scored"), 900);
     }
 
     function renderLeaderboards() {
@@ -1847,6 +2149,7 @@
       leaderboardView.classList.remove("hidden");
       clearTimeout(state.botTimer);
       stopTurnClock();
+      state.pendingFeedback = null;
       renderPlayerFields();
       renderLeaderboards();
     }
