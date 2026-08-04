@@ -247,6 +247,23 @@
       gap: 6px;
     }
 
+    .auth-panel {
+      display: grid;
+      gap: 10px;
+    }
+
+    .auth-provider {
+      justify-content: center;
+    }
+
+    .auth-status {
+      min-height: 20px;
+      margin: 0;
+      color: var(--mauve);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
     .field label {
       color: var(--muted);
       font-size: 12px;
@@ -1388,67 +1405,32 @@
             </div>
           </div>
         </div>
-        <p class="hero-summary">Four of Europe's top leagues. Mixed question formats: direct answers, multiple choice, fill-the-blank, sequence ordering, and matching pairs. Every question starts at 10 points. Bot response time averages about 7 seconds.</p>
+        <p class="hero-summary">Four of Europe's top leagues. Mixed question formats: direct answers, multiple choice, fill-the-blank, sequence ordering, and matching pairs.</p>
       </div>
 
       <form class="setup-card" id="setupForm">
         <div class="row">
           <span class="tag tag-high">Let's play</span>
-          <span class="status admin-badge">Admin: Calmriver15</span>
+          <span class="status admin-badge">Godmode ready</span>
         </div>
         <div>
-          <p class="label">Registration</p>
-          <h2>Claim your seat</h2>
+          <p class="label">Quick sign in</p>
+          <h2>Enter the room</h2>
         </div>
-        <div class="field">
-          <label for="primaryPlayer">Your name</label>
-          <input id="primaryPlayer" name="primaryPlayer" placeholder="Enter your table name" maxlength="18">
+        <div class="auth-panel">
+          <button class="button button-dark auth-provider" type="button" data-provider="Google">Continue with Google</button>
+          <button class="button auth-provider" type="button" data-provider="Apple">Continue with Apple</button>
+          <button class="button auth-provider" type="button" data-provider="GitHub">Continue with GitHub</button>
+          <button class="button button-primary" id="godModeButton" type="button">Enter as Calmriver15</button>
         </div>
-        <div class="field">
-          <label for="playerCount">Seats</label>
-          <select id="playerCount" name="playerCount">
-            <option value="2">2 players</option>
-            <option value="3">3 players</option>
-            <option value="4" selected>4 players</option>
-          </select>
-        </div>
-        <div class="field admin-options" id="adminOptions">
-          <label for="humanCount">Human players on this device</label>
-          <select id="humanCount" name="humanCount">
-            <option value="1" selected>1 human</option>
-            <option value="2">2 humans</option>
-            <option value="3">3 humans</option>
-            <option value="4">4 humans</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="botPersonality">Table personality</label>
-          <select id="botPersonality" name="botPersonality">
-            <option value="balanced" selected>Mixed table</option>
-            <option value="safe">Safe bettors</option>
-            <option value="connector">Connection masters</option>
-            <option value="shark">Sharks</option>
-            <option value="whale">Whales</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="questionCount">Question deck</label>
-          <select id="questionCount" name="questionCount">
-            <option value="5">5 questions</option>
-            <option value="10" selected>10 questions</option>
-            <option value="15">15 questions</option>
-          </select>
+        <p class="auth-status" id="authStatus">Visitors choose a sign-in option. Godmode skips registration.</p>
+        <div class="field" id="visitorNameField">
+          <label for="primaryPlayer">Display name</label>
+          <input id="primaryPlayer" name="primaryPlayer" placeholder="Pick your table name" maxlength="18">
         </div>
         <div class="player-fields" id="playerFields"></div>
-        <button class="button button-primary" type="submit">Let's play</button>
+        <button class="button button-primary" type="submit">Start random room</button>
       </form>
-    </section>
-
-    <section class="stats" aria-label="Game rules">
-      <div class="stat-card"><p class="label">Question bank</p><strong>240+</strong><span class="tag tag-low">2010-2026 era</span></div>
-      <div class="stat-card"><p class="label">Seats</p><strong>2-4</strong></div>
-      <div class="stat-card"><p class="label">Starting score</p><strong>0</strong><span class="tag">Highest wins</span></div>
-      <div class="stat-card"><p class="label">Turn clock</p><strong>25s</strong><span class="tag tag-high">Per player</span></div>
     </section>
 
     <section class="leaderboard-section" id="leaderboardView" aria-label="Leaderboards">
@@ -1758,7 +1740,9 @@
     const questions = buildQuestionBank(240);
     const questionHistoryKey = "boot-room-trivia-question-history-v2";
     const leaderboardKeyPrefix = "boot-room-trivia-weekly-leaderboard";
+    const userStoreKey = "boot-room-trivia-users-v1";
     const questionHistoryLimit = 100;
+    let selectedAuthProvider = null;
 
     const state = {
       players: [],
@@ -1823,6 +1807,50 @@
       saveJson(weeklyLeaderboardKey(), data);
     }
 
+    function loadUsers() {
+      return loadJson(userStoreKey, {});
+    }
+
+    function saveUsers(users) {
+      saveJson(userStoreKey, users);
+    }
+
+    function userIdFor(name, provider) {
+      return `${normalize(provider)}:${normalize(name)}`;
+    }
+
+    function upsertUserProfile(name, provider = selectedAuthProvider, isAdmin = false) {
+      const users = loadUsers();
+      const id = userIdFor(name, provider);
+      const existing = users[id] || {};
+      const profile = {
+        id,
+        username: name,
+        provider,
+        country: existing.country || (isAdmin ? "United States" : "United States"),
+        weekly_cumulative_scores: Number(existing.weekly_cumulative_scores || 0),
+        created_at: existing.created_at || new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
+        is_admin: isAdmin
+      };
+      users[id] = profile;
+      saveUsers(users);
+      return profile;
+    }
+
+    function addWeeklyScoreToProfile(player, points) {
+      const provider = player.authProvider || (player.isAdmin ? "Godmode" : "Guest");
+      const profile = upsertUserProfile(player.name, provider, player.isAdmin);
+      const users = loadUsers();
+      users[profile.id] = {
+        ...profile,
+        weekly_cumulative_scores: Number(profile.weekly_cumulative_scores || 0) + Math.max(0, points),
+        last_seen_at: new Date().toISOString()
+      };
+      saveUsers(users);
+      return users[profile.id];
+    }
+
     function selectQuestionDeck(size) {
       const history = loadJson(questionHistoryKey, []);
       const historySet = new Set(history);
@@ -1831,20 +1859,42 @@
         available = questions.filter((question) => !history.slice(-Math.floor(questionHistoryLimit / 2)).includes(question.id));
       }
       if (available.length < size) available = questions;
-      const selected = shuffle(available).slice(0, size);
+      const selected = selectRotatingQuestionDeck(available, size);
       saveJson(questionHistoryKey, [...history, ...selected.map((question) => question.id)].slice(-questionHistoryLimit));
+      return selected;
+    }
+
+    function selectRotatingQuestionDeck(pool, size) {
+      const typeCycle = shuffle(["multiple_choice", "direct", "fill_blank", "sequence", "matching"]);
+      const buckets = pool.reduce((grouped, question) => {
+        grouped[question.type] = grouped[question.type] || [];
+        grouped[question.type].push(question);
+        return grouped;
+      }, {});
+      Object.keys(buckets).forEach((type) => {
+        buckets[type] = shuffle(buckets[type]);
+      });
+      const selected = [];
+      for (let index = 0; selected.length < size && index < size * 3; index += 1) {
+        const preferredType = typeCycle[index % typeCycle.length];
+        const next = buckets[preferredType]?.shift() || Object.values(buckets).find((bucket) => bucket.length)?.shift();
+        if (next && !selected.some((question) => question.id === next.id)) selected.push(next);
+      }
+      if (selected.length < size) {
+        shuffle(pool).forEach((question) => {
+          if (selected.length < size && !selected.some((item) => item.id === question.id)) selected.push(question);
+        });
+      }
       return selected;
     }
 
     const setupView = document.querySelector("#setupView");
     const setupForm = document.querySelector("#setupForm");
     const primaryPlayer = document.querySelector("#primaryPlayer");
-    const playerCount = document.querySelector("#playerCount");
-    const adminOptions = document.querySelector("#adminOptions");
-    const humanCount = document.querySelector("#humanCount");
-    const botPersonality = document.querySelector("#botPersonality");
-    const questionCount = document.querySelector("#questionCount");
     const playerFields = document.querySelector("#playerFields");
+    const authProviderButtons = document.querySelectorAll(".auth-provider");
+    const godModeButton = document.querySelector("#godModeButton");
+    const authStatus = document.querySelector("#authStatus");
     const leaderboardView = document.querySelector("#leaderboardView");
     const gameView = document.querySelector("#gameView");
     const roomTitle = document.querySelector("#roomTitle");
@@ -1897,42 +1947,53 @@
     }
 
     function renderPlayerFields() {
-      const isAdmin = primaryPlayer.value.trim().toLowerCase() === adminName.toLowerCase();
-      adminOptions.classList.toggle("is-visible", isAdmin);
-      if (!isAdmin) humanCount.value = "1";
-      syncHumanOptions();
-      const count = Number(humanCount.value);
       playerFields.innerHTML = "";
-      if (!isAdmin) return;
-      for (let i = 1; i < count; i += 1) {
-        const field = document.createElement("div");
-        field.className = "field";
-        field.innerHTML = `
-          <label for="player-${i}">Additional human ${i + 1}</label>
-          <input id="player-${i}" name="player-${i}" value="Player ${i + 1}" maxlength="18">
-        `;
-        playerFields.appendChild(field);
-      }
     }
 
-    function syncHumanOptions() {
-      const seats = Number(playerCount.value);
-      Array.from(humanCount.options).forEach((option) => {
-        option.disabled = Number(option.value) > seats;
+    function setAuthStatus(message) {
+      authStatus.textContent = message;
+    }
+
+    function selectAuthProvider(provider) {
+      selectedAuthProvider = provider;
+      authProviderButtons.forEach((button) => {
+        button.classList.toggle("button-primary", button.dataset.provider === provider);
+        button.classList.toggle("button-dark", button.dataset.provider !== provider && button.dataset.provider === "Google");
       });
-      if (Number(humanCount.value) > seats) humanCount.value = String(seats);
+      setAuthStatus(`${provider} sign-in selected. Add your display name and start a room.`);
+    }
+
+    function startGodMode() {
+      selectedAuthProvider = "Godmode";
+      primaryPlayer.value = adminName;
+      startRoom(new Event("submit"));
+    }
+
+    function randomRoomSize() {
+      return [2, 3, 4][Math.floor(Math.random() * 3)];
+    }
+
+    function deckSizeForRoom(seats) {
+      if (seats === 2) return 10;
+      if (seats === 3) return Math.random() < .5 ? 15 : 20;
+      return 25;
     }
 
     function startRoom(event) {
       event.preventDefault();
-      const count = Number(playerCount.value);
-      const humans = primaryPlayer.value.trim().toLowerCase() === adminName.toLowerCase() ? Number(humanCount.value) : 1;
-      const deckSize = Number(questionCount.value);
+      const count = randomRoomSize();
+      const humans = 1;
+      const deckSize = deckSizeForRoom(count);
       const primaryName = primaryPlayer.value.trim() || `Guest${Math.floor(10 + Math.random() * 90)}`;
+      const isAdmin = primaryName.toLowerCase() === adminName.toLowerCase();
+      if (!isAdmin && !selectedAuthProvider) {
+        setAuthStatus("Choose Google, Apple, or GitHub sign-in before starting a random room.");
+        return;
+      }
+      const profile = upsertUserProfile(primaryName, isAdmin ? "Godmode" : selectedAuthProvider, isAdmin);
       const humanPlayers = Array.from({ length: humans }, (_, index) => {
-        const input = index === 0 ? primaryPlayer : document.querySelector(`#player-${index}`);
-        const name = input?.value.trim() || `Player ${index + 1}`;
-        return makePlayer(name, "human", index, name.toLowerCase() === adminName.toLowerCase());
+        const name = index === 0 ? profile.username : `Player ${index + 1}`;
+        return makePlayer(name, "human", index, profile.is_admin, null, profile.provider, profile.id);
       });
       const botPlayers = makeBots(count - humans);
       state.players = [...humanPlayers, ...botPlayers];
@@ -1954,11 +2015,11 @@
       leaderboardView.classList.add("hidden");
       gameView.classList.add("is-live");
       gameLog.innerHTML = "";
-      addLog(`Room opened. Scores start at 0; ${botPlayers.length} table opponents filled empty seats. Deck avoids the last ${questionHistoryLimit} local questions where possible.`);
+      addLog(`Room opened as a random ${count}-seat table with ${deckSize} questions. Scores start at 0; ${botPlayers.length} table opponents filled empty seats.`);
       beginTurn();
     }
 
-    function makePlayer(name, kind, index, isAdmin = false, botProfile = null) {
+    function makePlayer(name, kind, index, isAdmin = false, botProfile = null, authProvider = "Guest", userId = null) {
       const initials = name.slice(0, 2).toUpperCase();
       const avatar = botProfile?.avatar || [["#ff5900", "#28ad78"], ["#0ea5e9", "#111827"], ["#7c3aed", "#16a34a"], ["#be123c", "#f59e0b"]][index % 4];
       return {
@@ -1966,6 +2027,8 @@
         name,
         kind,
         isAdmin,
+        authProvider,
+        userId,
         score: 0,
         correct: 0,
         attempts: 0,
@@ -1980,10 +2043,8 @@
     }
 
     function makeBots(count) {
-      const preference = botPersonality.value;
-      const pool = preference === "balanced" ? botPool : botPool.filter((bot) => bot.personality === preference);
-      return shuffle(pool.length ? pool : botPool).slice(0, count).map((bot, index) => (
-        makePlayer(bot.name, "bot", index, false, bot)
+      return shuffle(botPool).slice(0, count).map((bot, index) => (
+        makePlayer(bot.name, "bot", index, false, bot, "Table")
       ));
     }
 
@@ -2638,21 +2699,24 @@
       const data = loadWeeklyLeaderboards();
       state.players.forEach((player) => {
         const country = player.isAdmin ? "United States" : player.kind === "bot" ? botCountry(player.name) : "United States";
-        upsertLeaderboardRow(data.weekly, player.name, country, player.score);
+        const profile = addWeeklyScoreToProfile(player, player.score);
+        upsertLeaderboardRow(data.weekly, player.name, country, player.score, profile.weekly_cumulative_scores);
         upsertLeaderboardRow(data.country, country, country, player.score);
       });
       saveWeeklyLeaderboards(data);
       renderLeaderboards();
     }
 
-    function upsertLeaderboardRow(rows, name, country, points) {
+    function upsertLeaderboardRow(rows, name, country, points, weeklyTotal = null) {
       const existing = rows.find((row) => normalize(row.name) === normalize(name));
       if (existing) {
-        existing.points += Math.max(0, points);
+        existing.points = weeklyTotal ?? existing.points + Math.max(0, points);
+        existing.weekly_cumulative_scores = existing.points;
         existing.country = country;
         return;
       }
-      rows.push({ name, country, points: Math.max(0, points) });
+      const total = weeklyTotal ?? Math.max(0, points);
+      rows.push({ name, country, points: total, weekly_cumulative_scores: total });
     }
 
     function botCountry(name) {
@@ -2682,9 +2746,10 @@
       renderLeaderboards();
     }
 
-    playerCount.addEventListener("change", renderPlayerFields);
-    primaryPlayer.addEventListener("input", renderPlayerFields);
-    humanCount.addEventListener("change", renderPlayerFields);
+    authProviderButtons.forEach((button) => {
+      button.addEventListener("click", () => selectAuthProvider(button.dataset.provider));
+    });
+    godModeButton.addEventListener("click", startGodMode);
     setupForm.addEventListener("submit", startRoom);
     answerForm.addEventListener("submit", submitGuess);
     answerTools.addEventListener("click", (event) => {
