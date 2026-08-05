@@ -68,6 +68,10 @@ Because this is a static prototype, you can open `index.html` directly in a brow
 For a local preview server:
 
 ```bash
+git clone https://github.com/ashwink9/boot-room-trivia.git
+
+cd boot-room-trivia
+
 python3 -m http.server 4173
 ```
 
